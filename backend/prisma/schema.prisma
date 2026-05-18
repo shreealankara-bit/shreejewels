@@ -1,0 +1,211 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  customer
+  admin
+  superadmin
+}
+
+enum DiscountType {
+  percentage
+  flat
+}
+
+enum BannerPosition {
+  hero
+  homepage_mid
+  category
+  popup
+  sidebar
+}
+
+enum PaymentMethod {
+  razorpay
+  cod
+}
+
+enum PaymentStatus {
+  pending
+  paid
+  failed
+  refunded
+}
+
+enum OrderStatus {
+  placed
+  confirmed
+  processing
+  shipped
+  out_for_delivery
+  delivered
+  cancelled
+  returned
+}
+
+model User {
+  id         String   @id @default(cuid())
+  name       String
+  email      String   @unique
+  password   String?
+  googleId   String?  @unique
+  avatar     String   @default("")
+  phone      String   @default("")
+  role       UserRole @default(customer)
+  addresses  Json     @default("[]")
+  wishlist   Json     @default("[]")
+  isActive   Boolean  @default(true)
+  lastLogin  DateTime?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  orders     Order[]
+  reviews    ProductReview[]
+}
+
+model Category {
+  id               String     @id @default(cuid())
+  name             String
+  slug             String     @unique
+  description      String     @default("")
+  image            String     @default("")
+  imagePublicId    String     @default("")
+  parentCategoryId String?
+  parentCategory   Category?  @relation("CategoryHierarchy", fields: [parentCategoryId], references: [id], onDelete: SetNull)
+  subcategories    Category[] @relation("CategoryHierarchy")
+  isActive         Boolean    @default(true)
+  order            Int        @default(0)
+  metaTitle        String     @default("")
+  metaDescription  String     @default("")
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  products         Product[]  @relation("ProductCategory")
+  subProducts      Product[]  @relation("ProductSubCategory")
+}
+
+model Product {
+  id              String        @id @default(cuid())
+  title           String
+  slug            String        @unique
+  description     String        @default("")
+  price           Float
+  discountPrice   Float         @default(0)
+  discountPercent Int           @default(0)
+  categoryId      String
+  category        Category      @relation("ProductCategory", fields: [categoryId], references: [id], onDelete: Restrict)
+  subCategoryId   String?
+  subCategory     Category?     @relation("ProductSubCategory", fields: [subCategoryId], references: [id], onDelete: SetNull)
+  images          Json          @default("[]")
+  stock           Int           @default(0)
+  sku             String?       @unique
+  tags            Json          @default("[]")
+  material        String        @default("")
+  weight          String        @default("")
+  dimensions      String        @default("")
+  isFeatured      Boolean       @default(false)
+  isBestseller    Boolean       @default(false)
+  isNewArrival    Boolean       @default(false)
+  isActive        Boolean       @default(true)
+  ratingsAverage  Float         @default(0)
+  ratingsCount    Int           @default(0)
+  metaTitle       String        @default("")
+  metaDescription String        @default("")
+  soldCount       Int           @default(0)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  reviews         ProductReview[]
+
+  @@index([categoryId, subCategoryId])
+  @@index([price])
+}
+
+model ProductReview {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  rating    Int
+  comment   String
+  createdAt DateTime @default(now())
+
+  @@unique([productId, userId])
+}
+
+model Coupon {
+  id                   String       @id @default(cuid())
+  code                 String       @unique
+  description          String       @default("")
+  discountType         DiscountType
+  value                Float
+  minOrderAmount       Float        @default(0)
+  maxDiscount          Float?
+  expiry               DateTime
+  usageLimit           Int?
+  usedCount            Int          @default(0)
+  usedBy               Json         @default("[]")
+  isActive             Boolean      @default(true)
+  applicableCategories Json         @default("[]")
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+}
+
+model Order {
+  id                String        @id @default(cuid())
+  orderId           String        @unique
+  userId            String
+  user              User          @relation(fields: [userId], references: [id], onDelete: Restrict)
+  items             Json
+  shippingAddress   Json
+  subtotal          Float
+  discount          Float         @default(0)
+  couponCode        String        @default("")
+  shippingCharge    Float         @default(0)
+  totalAmount       Float
+  paymentMethod     PaymentMethod @default(razorpay)
+  paymentStatus     PaymentStatus @default(pending)
+  razorpayOrderId   String        @default("")
+  razorpayPaymentId String        @default("")
+  razorpaySignature String        @default("")
+  orderStatus       OrderStatus   @default(placed)
+  trackingNumber    String        @default("")
+  notes             String        @default("")
+  estimatedDelivery DateTime?
+  deliveredAt       DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  @@index([userId])
+  @@index([paymentStatus])
+  @@index([orderStatus])
+  @@index([createdAt])
+}
+
+model Banner {
+  id            String         @id @default(cuid())
+  title         String
+  subtitle      String         @default("")
+  image         String
+  imagePublicId String         @default("")
+  mobileImage   String         @default("")
+  link          String         @default("")
+  buttonText    String         @default("Shop Now")
+  position      BannerPosition @default(hero)
+  isActive      Boolean        @default(true)
+  order         Int            @default(0)
+  startDate     DateTime?
+  endDate       DateTime?
+  textColor     String         @default("#ffffff")
+  bgColor       String         @default("")
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
