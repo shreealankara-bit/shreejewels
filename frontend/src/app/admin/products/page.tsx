@@ -139,7 +139,7 @@ export default function AdminProductsPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+      <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
         <div>
           <h1 className="text-xl font-display text-charcoal-900">Products</h1>
           <p className="text-sm text-charcoal-500 mt-0.5">{pagination.total} total products</p>
@@ -149,40 +149,88 @@ export default function AdminProductsPage() {
         </button>
       </div>
 
-      {/* Filters */}
-      <div className="flex gap-3 mb-5 flex-wrap">
-        <div className="relative flex-1 min-w-48">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-charcoal-500" />
+      {/* Search */}
+      <div className="mb-4">
+        <div className="relative">
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-charcoal-400" />
           <input
             type="text"
             placeholder="Search products..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full bg-white border border-cream-200 text-charcoal-900 text-sm pl-9 pr-4 py-2.5 focus:outline-none focus:border-gold-400 placeholder-charcoal-500"
+            className="w-full bg-white border border-charcoal-100 text-charcoal-900 text-sm pl-9 pr-4 py-2.5 focus:outline-none focus:border-gold-400 placeholder-charcoal-400"
           />
         </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-white border border-cream-200 overflow-hidden">
+      {/* MOBILE: Card list */}
+      <div className="sm:hidden space-y-2 mb-4">
+        {loading ? (
+          Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="bg-white border border-charcoal-100 p-3 flex gap-3 animate-pulse">
+              <div className="w-14 h-16 bg-cream-100 flex-shrink-0 rounded" />
+              <div className="flex-1 space-y-2">
+                <div className="h-4 bg-cream-100 rounded w-3/4" />
+                <div className="h-3 bg-cream-100 rounded w-1/2" />
+                <div className="h-3 bg-cream-100 rounded w-1/3" />
+              </div>
+            </div>
+          ))
+        ) : products.length === 0 ? (
+          <div className="text-center py-10 text-charcoal-500 bg-white border border-charcoal-100">
+            No products found.
+            <button onClick={openCreate} className="block mx-auto text-gold-500 mt-2">+ Add first product</button>
+          </div>
+        ) : products.map(product => (
+          <div key={product._id} className="bg-white border border-charcoal-100 p-3 flex gap-3">
+            <div className="relative w-14 h-16 flex-shrink-0 bg-cream-50 rounded overflow-hidden">
+              {product.images[0] && <Image src={product.images[0].url} alt={product.title} fill className="object-cover" />}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-charcoal-900 line-clamp-1">{product.title}</p>
+              <p className="text-xs text-charcoal-500">{product.category?.name || '—'}</p>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-sm font-semibold text-gold-500">₹{(product.discountPrice || product.price).toLocaleString()}</span>
+                <span className={`text-xs ${product.stock === 0 ? 'text-red-400' : product.stock <= 5 ? 'text-yellow-500' : 'text-green-500'}`}>
+                  Stock: {product.stock}
+                </span>
+                <span className={`text-[10px] px-1.5 py-0.5 ${product.isActive ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-500'}`}>
+                  {product.isActive ? 'Active' : 'Hidden'}
+                </span>
+              </div>
+            </div>
+            <div className="flex flex-col gap-1 flex-shrink-0">
+              <button onClick={() => openEdit(product)} className="p-2 text-charcoal-500 hover:text-charcoal-900 hover:bg-charcoal-50 rounded transition-colors">
+                <Pencil size={15} />
+              </button>
+              <button onClick={() => setDeleteId(product._id)} className="p-2 text-charcoal-500 hover:text-red-500 hover:bg-red-50 rounded transition-colors">
+                <Trash2 size={15} />
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* DESKTOP: Table */}
+      <div className="hidden sm:block bg-white border border-charcoal-100 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-cream-50 border-b border-cream-200">
+            <thead className="bg-cream-50 border-b border-charcoal-100">
               <tr>
-                <th className="text-left px-4 py-3 text-xs text-charcoal-600 uppercase tracking-wider">Product</th>
-                <th className="text-left px-4 py-3 text-xs text-charcoal-600 uppercase tracking-wider">Category</th>
-                <th className="text-left px-4 py-3 text-xs text-charcoal-600 uppercase tracking-wider">Price</th>
-                <th className="text-left px-4 py-3 text-xs text-charcoal-600 uppercase tracking-wider">Stock</th>
-                <th className="text-left px-4 py-3 text-xs text-charcoal-600 uppercase tracking-wider">Status</th>
-                <th className="text-left px-4 py-3 text-xs text-charcoal-600 uppercase tracking-wider">Actions</th>
+                <th className="text-left px-4 py-3 text-xs text-charcoal-500 uppercase tracking-wider">Product</th>
+                <th className="text-left px-4 py-3 text-xs text-charcoal-500 uppercase tracking-wider">Category</th>
+                <th className="text-left px-4 py-3 text-xs text-charcoal-500 uppercase tracking-wider">Price</th>
+                <th className="text-left px-4 py-3 text-xs text-charcoal-500 uppercase tracking-wider">Stock</th>
+                <th className="text-left px-4 py-3 text-xs text-charcoal-500 uppercase tracking-wider">Status</th>
+                <th className="text-left px-4 py-3 text-xs text-charcoal-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-charcoal-800">
+            <tbody className="divide-y divide-charcoal-50">
               {loading ? (
                 Array.from({ length: 8 }).map((_, i) => (
                   <tr key={i} className="animate-pulse">
-                    <td className="px-4 py-3"><div className="h-4 bg-cream-50 rounded w-3/4" /></td>
-                    {Array.from({ length: 5 }).map((_, j) => <td key={j} className="px-4 py-3"><div className="h-4 bg-cream-50 rounded w-2/3" /></td>)}
+                    <td className="px-4 py-3"><div className="h-4 bg-cream-100 rounded w-3/4" /></td>
+                    {Array.from({ length: 5 }).map((_, j) => <td key={j} className="px-4 py-3"><div className="h-4 bg-cream-100 rounded w-2/3" /></td>)}
                   </tr>
                 ))
               ) : products.length === 0 ? (
@@ -198,34 +246,34 @@ export default function AdminProductsPage() {
                         <div>
                           <p className="text-charcoal-900 font-medium line-clamp-1">{product.title}</p>
                           <div className="flex gap-1 mt-0.5">
-                            {product.isFeatured && <span className="text-[10px] bg-gold-900 text-gold-300 px-1.5 py-0.5">Featured</span>}
-                            {product.isBestseller && <span className="text-[10px] bg-blue-900 text-blue-300 px-1.5 py-0.5">Bestseller</span>}
-                            {product.isNewArrival && <span className="text-[10px] bg-green-900 text-green-300 px-1.5 py-0.5">New</span>}
+                            {product.isFeatured && <span className="text-[10px] bg-gold-100 text-gold-600 px-1.5 py-0.5">Featured</span>}
+                            {product.isBestseller && <span className="text-[10px] bg-blue-100 text-blue-600 px-1.5 py-0.5">Bestseller</span>}
+                            {product.isNewArrival && <span className="text-[10px] bg-green-100 text-green-600 px-1.5 py-0.5">New</span>}
                           </div>
                         </div>
                       </div>
                     </td>
                     <td className="px-4 py-3 text-charcoal-600">{product.category?.name || '—'}</td>
                     <td className="px-4 py-3">
-                      <p className="text-gold-400 font-medium">₹{(product.discountPrice || product.price).toLocaleString()}</p>
-                      {product.discountPrice > 0 && <p className="text-xs text-charcoal-500 line-through">₹{product.price.toLocaleString()}</p>}
+                      <p className="text-gold-500 font-semibold">₹{(product.discountPrice || product.price).toLocaleString()}</p>
+                      {product.discountPrice > 0 && <p className="text-xs text-charcoal-400 line-through">₹{product.price.toLocaleString()}</p>}
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`text-sm font-medium ${product.stock === 0 ? 'text-red-400' : product.stock <= 5 ? 'text-yellow-400' : 'text-green-400'}`}>
+                      <span className={`text-sm font-medium ${product.stock === 0 ? 'text-red-400' : product.stock <= 5 ? 'text-yellow-500' : 'text-green-500'}`}>
                         {product.stock}
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`inline-block text-xs px-2 py-0.5 ${product.isActive ? 'bg-green-900/50 text-green-400' : 'bg-red-900/50 text-red-400'}`}>
+                      <span className={`inline-block text-xs px-2 py-0.5 ${product.isActive ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-500'}`}>
                         {product.isActive ? 'Active' : 'Hidden'}
                       </span>
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <button onClick={() => openEdit(product)} id={`edit-${product._id}`} className="p-1.5 text-charcoal-600 hover:text-charcoal-900 hover:bg-charcoal-700 transition-colors">
+                        <button onClick={() => openEdit(product)} id={`edit-${product._id}`} className="p-1.5 text-charcoal-500 hover:text-charcoal-900 hover:bg-charcoal-50 rounded transition-colors">
                           <Pencil size={14} />
                         </button>
-                        <button onClick={() => setDeleteId(product._id)} id={`delete-${product._id}`} className="p-1.5 text-charcoal-600 hover:text-red-400 hover:bg-charcoal-700 transition-colors">
+                        <button onClick={() => setDeleteId(product._id)} id={`delete-${product._id}`} className="p-1.5 text-charcoal-500 hover:text-red-500 hover:bg-red-50 rounded transition-colors">
                           <Trash2 size={14} />
                         </button>
                       </div>
@@ -239,13 +287,22 @@ export default function AdminProductsPage() {
 
         {/* Pagination */}
         {pagination.pages > 1 && (
-          <div className="flex justify-center gap-1 p-4 border-t border-cream-200">
+          <div className="flex justify-center gap-1 p-4 border-t border-charcoal-100">
             {Array.from({ length: pagination.pages }, (_, i) => i + 1).map(p => (
-              <button key={p} onClick={() => setPage(p)} className={`w-8 h-8 text-xs transition-colors ${p === page ? 'bg-gold-500 text-charcoal-900' : 'bg-cream-50 text-charcoal-600 hover:bg-charcoal-700'}`}>{p}</button>
+              <button key={p} onClick={() => setPage(p)} className={`w-8 h-8 text-xs transition-colors ${p === page ? 'bg-gold-500 text-white' : 'bg-cream-50 text-charcoal-600 hover:bg-charcoal-50'}`}>{p}</button>
             ))}
           </div>
         )}
       </div>
+
+      {/* Mobile pagination */}
+      {pagination.pages > 1 && (
+        <div className="sm:hidden flex justify-center gap-1 mt-3">
+          {Array.from({ length: pagination.pages }, (_, i) => i + 1).map(p => (
+            <button key={p} onClick={() => setPage(p)} className={`w-8 h-8 text-xs rounded transition-colors ${p === page ? 'bg-gold-500 text-white' : 'bg-white border border-charcoal-100 text-charcoal-600'}`}>{p}</button>
+          ))}
+        </div>
+      )}
 
       {/* Product Modal */}
       <AnimatePresence>
@@ -253,8 +310,8 @@ export default function AdminProductsPage() {
           <>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="fixed inset-0 bg-black/70 z-50" onClick={() => setModalOpen(false)} />
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
-              className="fixed inset-4 md:inset-10 bg-white border border-cream-200 z-50 flex flex-col overflow-hidden"
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
+              className="fixed inset-0 sm:inset-4 md:inset-8 lg:inset-12 bg-white border border-charcoal-100 z-50 flex flex-col overflow-hidden sm:rounded-sm"
             >
               <div className="flex items-center justify-between px-6 py-4 border-b border-cream-200">
                 <h2 className="text-lg font-display text-charcoal-900">{editProduct ? 'Edit Product' : 'Add New Product'}</h2>
