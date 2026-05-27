@@ -86,18 +86,32 @@ interface CategoryRowProps {
 export function CategoryRow({ title, queryParams, viewAllHref, promoLabel }: CategoryRowProps) {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [inView, setInView] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        setInView(true);
+        observer.disconnect();
+      }
+    }, { rootMargin: '300px' });
+    if (ref.current) observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!inView) return;
     productAPI.getAll({ ...queryParams, limit: '8' })
       .then(res => setProducts(res.data.products || []))
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, []);
+  }, [inView]);
 
   if (!loading && products.length === 0) return null;
 
   return (
-    <div className="category-section">
+    <div ref={ref} className="category-section">
       <div className="category-section-inner">
         <h2 className="section-heading">{title}</h2>
         <div className="hscroll">
@@ -118,18 +132,32 @@ export function CategoryRow({ title, queryParams, viewAllHref, promoLabel }: Cat
 export default function BestSellers() {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [inView, setInView] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        setInView(true);
+        observer.disconnect();
+      }
+    }, { rootMargin: '300px' });
+    if (ref.current) observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!inView) return;
     productAPI.getAll({ bestseller: 'true', limit: '8', sort: 'popular' })
       .then(res => setProducts(res.data.products || []))
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, []);
+  }, [inView]);
 
   if (!loading && products.length === 0) return null;
 
   return (
-    <div className="category-section" style={{ paddingTop: 48 }}>
+    <div ref={ref} className="category-section" style={{ paddingTop: 48 }}>
       <div className="category-section-inner">
         <h2 className="section-heading">Shop Our Best Sellers</h2>
         <div className="hscroll">

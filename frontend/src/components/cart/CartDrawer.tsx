@@ -2,12 +2,16 @@
 import React, { useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Plus, Minus, ShoppingBag, Trash2, ArrowRight } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
+import { useAuth } from '@/context/AuthContext';
 
 export default function CartDrawer() {
   const { state, toggleCart, removeFromCart, updateQuantity, subtotal } = useCart();
+  const { isLoggedIn } = useAuth();
+  const router = useRouter();
   const { items, isOpen } = state;
   const freeAt = 999;
   const shippingFree = subtotal >= freeAt;
@@ -96,9 +100,17 @@ export default function CartDrawer() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16, fontWeight: 700, fontSize: '1rem', borderTop: '1px solid #efefef', paddingTop: 12 }}>
                   <span>Total</span><span>₹{(subtotal + shipping).toLocaleString()}</span>
                 </div>
-                <Link href="/checkout" onClick={toggleCart} id="proceed-checkout" className="btn-dark" style={{ width: '100%', justifyContent: 'center' }}>
+                <button
+                  id="proceed-checkout"
+                  className="btn-dark"
+                  style={{ width: '100%', justifyContent: 'center' }}
+                  onClick={() => {
+                    toggleCart();
+                    router.push(isLoggedIn ? '/checkout' : '/auth/login?redirect=/checkout');
+                  }}
+                >
                   Checkout <ArrowRight size={15} />
-                </Link>
+                </button>
                 <button onClick={toggleCart} style={{ display: 'block', width: '100%', marginTop: 10, background: 'none', border: 'none', fontSize: '.78rem', color: '#888', cursor: 'pointer', textDecoration: 'underline' }}>
                   Continue Shopping
                 </button>

@@ -357,3 +357,25 @@ body{font-family:var(--font-sans);color:var(--brand-green-900);background:var(--
 
 /* admin helper */
 .bg-gold-gradient{background:linear-gradient(135deg,#d4af37 0%,#f6e2a7 50%,#d4af37 100%)}
+
+/* Google Sign-In Button Fix */
+div[role="button"] {
+  width: auto !important;
+}
+
+.gsi-material-button {
+  width: auto !important;
+}
+
+/* ── MOBILE IMPROVEMENTS ── */
+@media(max-width:640px){
+  .navbar-inner{height:72px;padding:0 14px}
+  .announcement-text{font-size:.65rem;letter-spacing:.07em}
+  .cart-drawer{max-width:100%}
+  .section-heading{font-size:1rem}
+  .hero-title{font-size:clamp(2rem,9vw,3.2rem)}
+  .footer-top{grid-template-columns:1fr;gap:20px;padding:28px 16px}
+  .footer-bottom{padding:12px 16px;font-size:.68rem}
+  .products-page{padding:12px 12px 48px}
+  .products-title{font-size:clamp(1.6rem,8vw,2.4rem)}
+}

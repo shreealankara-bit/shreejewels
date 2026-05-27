@@ -89,15 +89,16 @@ function LoginContent() {
         <div className="mb-5">
           {clientId ? (
             <GoogleOAuthProvider clientId={clientId}>
-              <GoogleLogin
-                onSuccess={handleGoogleSuccess}
-                onError={() => toast.error('Google login failed')}
-                useOneTap={false}
-                theme="outline"
-                size="large"
-                width="100%"
-                text={tab === 'register' ? 'signup_with' : 'signin_with'}
-              />
+              <div className="flex justify-center">
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={() => toast.error('Google login failed')}
+                  useOneTap={false}
+                  theme="outline"
+                  size="large"
+                  text={tab === 'register' ? 'signup_with' : 'signin_with'}
+                />
+              </div>
             </GoogleOAuthProvider>
           ) : (
             <button

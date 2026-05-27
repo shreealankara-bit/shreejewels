@@ -17,7 +17,6 @@ export default function WishlistPage() {
   const [fetching, setFetching] = useState(true);
 
   useEffect(() => {
-    if (!loading && !isLoggedIn) router.push('/auth/login?redirect=/wishlist');
     if (isLoggedIn && user?.wishlist?.length) {
       // Fetch wishlist products individually
       Promise.all(user.wishlist.map(async (id: string) => {
@@ -38,6 +37,26 @@ export default function WishlistPage() {
   };
 
   if (loading || fetching) return <div className="min-h-screen flex items-center justify-center text-gold-500">Loading...</div>;
+
+  // Not logged in — show a friendly locked state
+  if (!isLoggedIn) {
+    return (
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10">
+        <h1 className="font-display text-2xl text-charcoal-900 mb-6">My Wishlist</h1>
+        <div className="text-center py-20 flex flex-col items-center gap-5">
+          <div className="w-20 h-20 rounded-full bg-cream-100 flex items-center justify-center">
+            <Heart size={36} className="text-charcoal-300" />
+          </div>
+          <div>
+            <p className="font-display text-2xl text-charcoal-700 mb-2">Sign in to view your wishlist</p>
+            <p className="text-sm text-charcoal-500 max-w-xs mx-auto">Save your favourite pieces and come back to them anytime.</p>
+          </div>
+          <Link href="/auth/login?redirect=/wishlist" className="btn-gold mt-2">Sign In</Link>
+          <Link href="/products" className="text-sm text-charcoal-500 underline underline-offset-2 hover:text-gold-600">Continue Browsing</Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10">

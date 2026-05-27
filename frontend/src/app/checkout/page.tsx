@@ -115,9 +115,9 @@ export default function CheckoutPage() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
         <h1 className="font-display text-2xl md:text-3xl text-charcoal-900 mb-8">Checkout</h1>
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="flex flex-col gap-6 lg:grid lg:grid-cols-3 lg:gap-8">
           {/* Left: Address + Payment */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-6 order-last lg:order-first">
             {/* Shipping address */}
             <div className="bg-white border border-charcoal-100 p-6">
               <h2 className="flex items-center gap-2 font-semibold text-charcoal-800 mb-5">
@@ -194,7 +194,7 @@ export default function CheckoutPage() {
           </div>
 
           {/* Right: Order summary */}
-          <div className="space-y-4">
+          <div className="space-y-4 order-first lg:order-last">
             <div className="bg-white border border-charcoal-100 p-6 sticky top-24">
               <h2 className="flex items-center gap-2 font-semibold text-charcoal-800 mb-4">
                 <ShoppingBag size={18} className="text-gold-500" /> Order Summary ({items.length} items)

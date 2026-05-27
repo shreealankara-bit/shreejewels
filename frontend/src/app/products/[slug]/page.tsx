@@ -110,11 +110,11 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
               {images.length > 1 && (
                 <>
                   <button onClick={() => setActiveImage(i => (i - 1 + images.length) % images.length)}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 flex items-center justify-center text-charcoal-700 hover:bg-white opacity-0 group-hover:opacity-100 transition-all">
+                    className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 flex items-center justify-center text-charcoal-700 hover:bg-white opacity-80 hover:opacity-100 transition-all">
                     <ChevronLeft size={16} />
                   </button>
                   <button onClick={() => setActiveImage(i => (i + 1) % images.length)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 flex items-center justify-center text-charcoal-700 hover:bg-white opacity-0 group-hover:opacity-100 transition-all">
+                    className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 flex items-center justify-center text-charcoal-700 hover:bg-white opacity-80 hover:opacity-100 transition-all">
                     <ChevronRight size={16} />
                   </button>
                 </>
@@ -210,7 +210,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
             )}
 
             {/* Actions */}
-            <div className="flex gap-3 pt-2">
+            <div className="flex flex-col sm:flex-row gap-3 pt-2">
               <motion.button
                 onClick={handleAddToCart}
                 disabled={product.stock === 0}
