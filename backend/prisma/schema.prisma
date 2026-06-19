@@ -27,7 +27,7 @@ enum BannerPosition {
 }
 
 enum PaymentMethod {
-  razorpay
+  cashfree
   cod
 }
 
@@ -117,6 +117,7 @@ model Product {
   ratingsCount    Int           @default(0)
   metaTitle       String        @default("")
   metaDescription String        @default("")
+  metaKeywords    String        @default("")
   soldCount       Int           @default(0)
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
@@ -155,6 +156,10 @@ model Coupon {
   usedBy               Json         @default("[]")
   isActive             Boolean      @default(true)
   applicableCategories Json         @default("[]")
+  applicableProductTypes Json       @default("[]")
+  applicableProductTags Json        @default("[]")
+  minProductPrice      Float?
+  maxProductPrice      Float?
   createdAt            DateTime     @default(now())
   updatedAt            DateTime     @updatedAt
 }
@@ -171,11 +176,10 @@ model Order {
   couponCode        String        @default("")
   shippingCharge    Float         @default(0)
   totalAmount       Float
-  paymentMethod     PaymentMethod @default(razorpay)
+  paymentMethod     PaymentMethod @default(cashfree)
   paymentStatus     PaymentStatus @default(pending)
-  razorpayOrderId   String        @default("")
-  razorpayPaymentId String        @default("")
-  razorpaySignature String        @default("")
+  cfOrderId         String        @default("")
+  cfPaymentId       String        @default("")
   orderStatus       OrderStatus   @default(placed)
   trackingNumber    String        @default("")
   notes             String        @default("")
@@ -208,4 +212,63 @@ model Banner {
   bgColor       String         @default("")
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
+}
+
+model SiteSettings {
+  id                String   @id @default(cuid())
+  siteName          String   @default("Shree Jewels")
+  metaTitle         String   @default("")
+  metaDescription   String   @default("")
+  metaKeywords      String   @default("")
+  faviconUrl        String   @default("")
+  faviconPublicId   String   @default("")
+  logoUrl           String   @default("")
+  logoPublicId      String   @default("")
+  smtpHost          String   @default("")
+  smtpPort          Int      @default(587)
+  smtpUser          String   @default("")
+  smtpPass          String   @default("")
+  smtpFrom          String   @default("")
+  aboutTitle        String   @default("About Us")
+  aboutContent      String   @default("")
+  aboutImage        String   @default("")
+  aboutImagePublicId String  @default("")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model Testimonial {
+  id             String   @id @default(cuid())
+  name           String
+  location       String   @default("")
+  rating         Int      @default(5)
+  comment        String
+  avatar         String   @default("")
+  avatarPublicId String   @default("")
+  isActive       Boolean  @default(true)
+  order          Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model MissingOrder {
+  id              String   @id @default(cuid())
+  sessionId       String
+  userId          String   @default("")
+  name            String   @default("")
+  email           String   @default("")
+  phone           String   @default("")
+  items           Json     @default("[]")
+  shippingAddress Json     @default("{}")
+  subtotal        Float    @default(0)
+  discount        Float    @default(0)
+  couponCode      String   @default("")
+  totalAmount     Float    @default(0)
+  reason          String   @default("abandoned")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([sessionId])
+  @@index([email])
+  @@index([createdAt])
 }

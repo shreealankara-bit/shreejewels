@@ -2,29 +2,47 @@ const asyncHandler = require('express-async-handler');
 const prisma = require('../config/prisma');
 
 const getAllUsers = asyncHandler(async (req, res) => {
-  const { search, page = 1, limit = 50 } = req.query;
+  const { search, page = 1, limit = 20, role } = req.query;
 
-  const where = search
-    ? {
-        OR: [
-          { name: { contains: String(search), mode: 'insensitive' } },
-          { email: { contains: String(search), mode: 'insensitive' } },
-        ],
-      }
-    : {};
+  const where = {
+    ...(role ? { role } : {}),
+    ...(search
+      ? {
+          OR: [
+            { name: { contains: String(search), mode: 'insensitive' } },
+            { email: { contains: String(search), mode: 'insensitive' } },
+          ],
+        }
+      : {}),
+  };
 
   const pageNum = Number(page);
   const limitNum = Number(limit);
 
   const [users, total] = await Promise.all([
-    prisma.user.findMany({ where, orderBy: { createdAt: 'desc' }, take: limitNum, skip: (pageNum - 1) * limitNum }),
+    prisma.user.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      take: limitNum,
+      skip: (pageNum - 1) * limitNum,
+      include: {
+        _count: { select: { orders: true } },
+      },
+    }),
     prisma.user.count({ where }),
   ]);
 
   res.json({
     success: true,
-    users: users.map((u) => ({ ...u, _id: u.id, password: undefined })),
+    users: users.map((u) => ({
+      ...u,
+      _id: u.id,
+      password: undefined,
+      ordersCount: u._count?.orders || 0,
+      _count: undefined,
+    })),
     total,
+    pagination: { page: pageNum, total, pages: Math.ceil(total / limitNum) },
   });
 });
 

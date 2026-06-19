@@ -7,9 +7,28 @@ import { useAuth } from '@/context/AuthContext';
 import {
   LayoutDashboard, Package, Tag, Image as ImageIcon,
   Ticket, ShoppingCart, Users, LogOut, Menu, X,
-  ChevronRight, ExternalLink
+  ChevronRight, ExternalLink, MessageSquare, AlertTriangle,
+  Settings, UserCheck
 } from 'lucide-react';
 import { useState } from 'react';
+import api, { orderAPI, productAPI, categoryAPI, couponAPI, bannerAPI, settingsAPI, testimonialAPI, missingOrderAPI, adminCustomerAPI } from '@/lib/api';
+
+const PREFETCH_MAP: Record<string, () => void> = {
+  '/admin': () => {
+    orderAPI.getStats().catch(() => {});
+    productAPI.getStats().catch(() => {});
+  },
+  '/admin/products': () => { productAPI.getAll().catch(() => {}); },
+  '/admin/categories': () => { categoryAPI.getAll().catch(() => {}); },
+  '/admin/banners': () => { bannerAPI.getAll().catch(() => {}); },
+  '/admin/coupons': () => { couponAPI.getAll().catch(() => {}); },
+  '/admin/orders': () => { orderAPI.getAllOrders().catch(() => {}); },
+  '/admin/users': () => { api.get('/admin/users').catch(() => {}); },
+  '/admin/customers': () => { adminCustomerAPI.getAll().catch(() => {}); },
+  '/admin/testimonials': () => { testimonialAPI.getAll().catch(() => {}); },
+  '/admin/missing-orders': () => { missingOrderAPI.getAll().catch(() => {}); },
+  '/admin/settings': () => { settingsAPI.getAdmin().catch(() => {}); },
+};
 
 const NAV_ITEMS = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
@@ -18,7 +37,11 @@ const NAV_ITEMS = [
   { href: '/admin/banners', label: 'Banners', icon: ImageIcon },
   { href: '/admin/coupons', label: 'Coupons', icon: Ticket },
   { href: '/admin/orders', label: 'Orders', icon: ShoppingCart },
-  { href: '/admin/users', label: 'Users', icon: Users },
+  { href: '/admin/customers', label: 'Customers', icon: UserCheck },
+  { href: '/admin/missing-orders', label: 'Missing Orders', icon: AlertTriangle },
+  { href: '/admin/testimonials', label: 'Testimonials', icon: MessageSquare },
+  { href: '/admin/users', label: 'Admin Users', icon: Users },
+  { href: '/admin/settings', label: 'Settings', icon: Settings },
 ];
 
 // Only first 5 shown in bottom tab bar on mobile
@@ -29,6 +52,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const handlePrefetch = (href: string) => {
+    const prefetchFn = PREFETCH_MAP[href];
+    if (prefetchFn) {
+      prefetchFn();
+    }
+  };
 
   useEffect(() => {
     if (!loading && (!user || !isAdmin)) router.push('/auth/login?redirect=/admin');
@@ -61,7 +91,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* Logo */}
         <div className="px-5 py-4 border-b border-charcoal-100 flex items-center justify-between">
           <Link href="/admin">
-            <Image src="/Logo_Main.png" alt="ShreeJewels" width={140} height={70} className="h-14 w-auto object-contain" />
+            <Image src="/Logo_Main.png" alt="ShreeJewels" width={140} height={70} className="h-14 w-auto object-contain" style={{width:'auto'}} />
           </Link>
           <div className="flex items-center gap-2">
             <span className="text-[10px] bg-gold-500/10 text-gold-600 font-bold px-2 py-0.5 rounded uppercase tracking-wider">Admin</span>
@@ -79,6 +109,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <Link
                 key={href}
                 href={href}
+                onMouseEnter={() => handlePrefetch(href)}
+                onTouchStart={() => handlePrefetch(href)}
                 className={`
                   flex items-center gap-3 px-4 py-3 mx-2 rounded-md text-sm transition-all group mb-0.5
                   ${active
@@ -142,7 +174,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
           {/* Mobile logo */}
           <Link href="/admin" className="lg:hidden">
-            <Image src="/Logo_Main.png" alt="ShreeJewels" width={100} height={50} className="h-9 w-auto object-contain" />
+            <Image src="/Logo_Main.png" alt="ShreeJewels" width={100} height={50} className="h-9 w-auto object-contain" style={{width:'auto'}} />
           </Link>
 
           {/* Page title area */}
@@ -181,6 +213,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <Link
                 key={href}
                 href={href}
+                onMouseEnter={() => handlePrefetch(href)}
+                onTouchStart={() => handlePrefetch(href)}
                 className={`
                   flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5 px-1 text-center transition-colors min-w-0
                   ${active ? 'text-gold-500' : 'text-charcoal-400 hover:text-charcoal-700'}

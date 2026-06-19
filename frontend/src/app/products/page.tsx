@@ -285,18 +285,22 @@ function ProductsContent() {
         </div>
       )}
 
-      <div className="products-filter-bar">
-        <div className="products-filter-left">
-          <span className="products-filter-label">Filter:</span>
-          <button onClick={() => setFilterOpen(true)} className="products-filter-btn">Product type</button>
-          <button onClick={() => setFilterOpen(true)} className="products-filter-btn">Price</button>
-          <button onClick={() => setFilterOpen(true)} className="products-filter-btn">Availability</button>
+      <div className="products-filter-bar flex flex-wrap items-center justify-between gap-4">
+        <div className="products-filter-left flex items-center gap-2">
+          <button onClick={() => setFilterOpen(true)} className="products-filter-btn flex items-center gap-1">
+            <SlidersHorizontal size={14} /> <span className="hidden sm:inline">Filter</span><span className="sm:hidden">Filters</span>
+          </button>
+          <div className="hidden md:flex gap-2">
+            <button onClick={() => setFilterOpen(true)} className="products-filter-btn">Product type</button>
+            <button onClick={() => setFilterOpen(true)} className="products-filter-btn">Price</button>
+            <button onClick={() => setFilterOpen(true)} className="products-filter-btn">Availability</button>
+          </div>
           {activeFilterCount > 0 && (
             <button onClick={clearFilters} className="products-filter-clear">Clear ({activeFilterCount})</button>
           )}
         </div>
-        <div className="products-filter-right">
-          <label className="products-filter-label">Sort by:</label>
+        <div className="products-filter-right flex items-center gap-2">
+          <label className="products-filter-label hidden sm:inline">Sort by:</label>
           <select
             value={filters.sort}
             onChange={e => updateFilter('sort', e.target.value)}
@@ -304,7 +308,7 @@ function ProductsContent() {
           >
             {sortOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
-          <span className="products-count">{pagination.total} products</span>
+          <span className="products-count hidden sm:inline">{pagination.total} products</span>
         </div>
       </div>
 

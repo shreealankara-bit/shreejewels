@@ -84,7 +84,7 @@ export default function AdminOrdersPage() {
 
       {/* Table */}
       <div className="bg-white border border-cream-200 overflow-x-auto">
-        <table className="w-full text-sm">
+        <table className="w-full text-sm min-w-[900px]">
           <thead className="bg-cream-50 border-b border-cream-200">
             <tr>
               {['Order ID', 'Customer', 'Items', 'Amount', 'Payment', 'Status', 'Date', 'Actions'].map(h => (

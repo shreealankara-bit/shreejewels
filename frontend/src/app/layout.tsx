@@ -3,22 +3,57 @@ import './globals.css';
 import { CartProvider } from '@/context/CartContext';
 import { AuthProvider } from '@/context/AuthContext';
 import { Toaster } from 'react-hot-toast';
-import Navbar from '@/components/layout/Navbar';
-import Footer from '@/components/layout/Footer';
-import CartDrawer from '@/components/cart/CartDrawer';
-import WhatsAppButton from '@/components/ui/WhatsAppButton';
+import ClientLayout from '@/components/layout/ClientLayout';
 
-export const metadata: Metadata = {
-  title: { default: 'ShreeJewels – Premium Jewellery Collection', template: '%s | ShreeJewels' },
-  description: 'Discover stunning Western & Traditional jewellery at ShreeJewels. Earrings, necklaces, bangles, and more – crafted for every occasion.',
-  keywords: ['jewellery', 'earrings', 'necklace', 'bangles', 'kundan', 'traditional jewellery', 'western jewellery', 'shreejewels'],
-  openGraph: {
-    type: 'website',
-    siteName: 'ShreeJewels',
-    title: 'ShreeJewels – Premium Jewellery Collection',
-    description: 'Stunning Western & Traditional jewellery for every occasion.',
-  },
+const DEFAULT_SEO = {
+  siteName: 'ShreeJewels',
+  metaTitle: 'ShreeJewels - Premium Jewellery Collection',
+  metaDescription: 'Discover stunning Western & Traditional jewellery at ShreeJewels. Earrings, necklaces, bangles, and more - crafted for every occasion.',
+  metaKeywords: 'jewellery, earrings, necklace, bangles, kundan, traditional jewellery, western jewellery, shreejewels',
+  faviconUrl: '',
+  logoUrl: '',
 };
+
+async function getSiteSettings() {
+  const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.API_PROXY_TARGET || 'http://localhost:4000/api';
+  const apiUrl = rawApiUrl.startsWith('http')
+    ? rawApiUrl.replace(/\/+$/, '')
+    : (process.env.API_PROXY_TARGET || 'http://localhost:4000/api').replace(/\/+$/, '');
+
+  try {
+    const res = await fetch(`${apiUrl}/settings`, { next: { revalidate: 300 } });
+    if (!res.ok) return DEFAULT_SEO;
+    const data = await res.json();
+    return { ...DEFAULT_SEO, ...(data.settings || {}) };
+  } catch {
+    return DEFAULT_SEO;
+  }
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getSiteSettings();
+  const siteName = settings.siteName || DEFAULT_SEO.siteName;
+  const title = settings.metaTitle || DEFAULT_SEO.metaTitle;
+  const description = settings.metaDescription || DEFAULT_SEO.metaDescription;
+  const keywords = String(settings.metaKeywords || DEFAULT_SEO.metaKeywords)
+    .split(',')
+    .map((keyword) => keyword.trim())
+    .filter(Boolean);
+
+  return {
+    title: { default: title, template: `%s | ${siteName}` },
+    description,
+    keywords,
+    icons: settings.faviconUrl ? { icon: settings.faviconUrl, shortcut: settings.faviconUrl, apple: settings.faviconUrl } : undefined,
+    openGraph: {
+      type: 'website',
+      siteName,
+      title,
+      description,
+      images: settings.logoUrl ? [{ url: settings.logoUrl, alt: siteName }] : undefined,
+    },
+  };
+}
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -26,13 +61,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <AuthProvider>
           <CartProvider>
-            <div className="flex flex-col min-h-screen">
-              <Navbar />
-              <main className="flex-1">{children}</main>
-              <Footer />
-            </div>
-            <CartDrawer />
-            <WhatsAppButton />
+            <ClientLayout>{children}</ClientLayout>
             <Toaster
               position="top-right"
               toastOptions={{

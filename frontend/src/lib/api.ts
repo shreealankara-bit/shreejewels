@@ -21,16 +21,55 @@ const api = axios.create({
 api.interceptors.response.use(
   (res) => res,
   (error) => {
-    if (error.response?.status === 401) {
-      if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/auth')) {
-        window.location.href = '/auth/login';
-      }
-    }
+    // Removed aggressive global redirect on 401. 
+    // Individual components will handle their own auth redirects if necessary.
     return Promise.reject(error);
   }
 );
 
+// In-memory cache for GET requests to make navigation instant
+const cache = new Map<string, { data: any; timestamp: number }>();
+const CACHE_TTL = 5000; // 5 seconds cache to keep it extremely fresh but snappy
+
+const originalGet = api.get;
+const originalPost = api.post;
+const originalPut = api.put;
+const originalDelete = api.delete;
+
+(api as any).get = function (url: string, config?: any) {
+  // Only cache on client side
+  if (typeof window !== 'undefined') {
+    const key = `${url}?${config?.params ? JSON.stringify(config.params) : ''}`;
+    const cached = cache.get(key);
+    const now = Date.now();
+    if (cached && now - cached.timestamp < CACHE_TTL) {
+      return Promise.resolve(cached.data);
+    }
+    return originalGet.call(this, url, config).then((res) => {
+      cache.set(key, { data: res, timestamp: Date.now() });
+      return res;
+    });
+  }
+  return originalGet.call(this, url, config);
+};
+
+(api as any).post = function (url: string, data?: any, config?: any) {
+  if (typeof window !== 'undefined') cache.clear();
+  return originalPost.call(this, url, data, config);
+};
+
+(api as any).put = function (url: string, data?: any, config?: any) {
+  if (typeof window !== 'undefined') cache.clear();
+  return originalPut.call(this, url, data, config);
+};
+
+(api as any).delete = function (url: string, config?: any) {
+  if (typeof window !== 'undefined') cache.clear();
+  return originalDelete.call(this, url, config);
+};
+
 export default api;
+
 
 // ===================== AUTH =====================
 export const authAPI = {
@@ -82,7 +121,7 @@ export const orderAPI = {
 
 // ===================== COUPONS =====================
 export const couponAPI = {
-  validate: (code: string, subtotal: number) => api.post('/coupons/validate', { code, subtotal }),
+  validate: (code: string, subtotal: number, items?: { productId: string; quantity: number }[]) => api.post('/coupons/validate', { code, subtotal, items }),
   // Admin
   getAll: () => api.get('/coupons/admin'),
   create: (data: object) => api.post('/coupons/admin', data),
@@ -98,4 +137,37 @@ export const bannerAPI = {
   create: (formData: FormData) => api.post('/banners/admin', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
   update: (id: string, formData: FormData) => api.put(`/banners/admin/${id}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
   delete: (id: string) => api.delete(`/banners/admin/${id}`),
+};
+
+// ===================== SITE SETTINGS =====================
+export const settingsAPI = {
+  getPublic: () => api.get('/settings'),
+  getAdmin: () => api.get('/settings/admin'),
+  update: (data: object) => api.put('/settings/admin', data),
+  uploadFavicon: (formData: FormData) => api.post('/settings/admin/upload-favicon', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  uploadLogo: (formData: FormData) => api.post('/settings/admin/upload-logo', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  uploadAboutImage: (formData: FormData) => api.post('/settings/admin/upload-about-image', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+};
+
+// ===================== TESTIMONIALS =====================
+export const testimonialAPI = {
+  getActive: () => api.get('/testimonials'),
+  // Admin
+  getAll: () => api.get('/testimonials/admin'),
+  create: (formData: FormData) => api.post('/testimonials/admin', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  update: (id: string, formData: FormData) => api.put(`/testimonials/admin/${id}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  delete: (id: string) => api.delete(`/testimonials/admin/${id}`),
+};
+
+// ===================== MISSING ORDERS =====================
+export const missingOrderAPI = {
+  save: (data: object) => api.post('/missing-orders', data),
+  // Admin
+  getAll: (params?: object) => api.get('/missing-orders/admin', { params }),
+  delete: (id: string) => api.delete(`/missing-orders/admin/${id}`),
+};
+
+// ===================== ADMIN CUSTOMERS =====================
+export const adminCustomerAPI = {
+  getAll: (params?: object) => api.get('/admin/users', { params }),
 };

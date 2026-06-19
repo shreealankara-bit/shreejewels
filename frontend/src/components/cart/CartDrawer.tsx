@@ -101,13 +101,12 @@ export default function CartDrawer() {
                   <span>Total</span><span>₹{(subtotal + shipping).toLocaleString()}</span>
                 </div>
                 <button
-                  id="proceed-checkout"
-                  className="btn-dark"
-                  style={{ width: '100%', justifyContent: 'center' }}
                   onClick={() => {
                     toggleCart();
-                    router.push(isLoggedIn ? '/checkout' : '/auth/login?redirect=/checkout');
+                    router.push('/checkout');
                   }}
+                  className="btn-dark"
+                  style={{ width: '100%', justifyContent: 'center' }}
                 >
                   Checkout <ArrowRight size={15} />
                 </button>

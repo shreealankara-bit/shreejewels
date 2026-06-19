@@ -14,6 +14,10 @@ const couponSchema = new mongoose.Schema(
     usedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     isActive: { type: Boolean, default: true },
     applicableCategories: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Category' }], // empty = all
+    applicableProductTypes: [{ type: String, enum: ['featured', 'bestseller', 'newArrival'] }], // empty = all
+    applicableProductTags: [{ type: String, trim: true, lowercase: true }], // empty = all
+    minProductPrice: { type: Number, default: null },
+    maxProductPrice: { type: Number, default: null },
   },
   { timestamps: true }
 );

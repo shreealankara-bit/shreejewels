@@ -7,6 +7,7 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 import { authAPI } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -65,11 +66,10 @@ function LoginContent() {
         className="w-full max-w-md bg-white shadow-card p-8 md:p-10"
       >
         {/* Logo */}
-        <div className="text-center mb-8">
-          <Link href="/" className="font-display text-3xl text-charcoal-900">
-            Shree<span className="text-gold-500">Jewels</span>
+        <div className="text-center mb-8 flex justify-center">
+          <Link href="/">
+            <Image src="/Logo_Main.png" alt="Shree Alankara" width={220} height={110} className="h-24 w-auto object-contain" />
           </Link>
-          <div className="h-px bg-gold-gradient w-24 mx-auto mt-1" />
         </div>
 
         {/* Tabs */}

@@ -88,14 +88,25 @@ app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'ShreeJewels API is running 💍', env: process.env.NODE_ENV });
 });
 
+// Cache middleware: adds Cache-Control headers for public GET routes
+const cachePublic = (seconds) => (req, res, next) => {
+  if (req.method === 'GET') {
+    res.set('Cache-Control', `public, max-age=${seconds}, stale-while-revalidate=${seconds * 2}`);
+  }
+  next();
+};
+
 // Routes
 app.use('/api/auth', require('./routes/auth'));
-app.use('/api/products', require('./routes/products'));
-app.use('/api/categories', require('./routes/categories'));
+app.use('/api/products', cachePublic(60), require('./routes/products'));     // 1 min cache
+app.use('/api/categories', cachePublic(300), require('./routes/categories')); // 5 min cache
 app.use('/api/orders', require('./routes/orders'));
 app.use('/api/coupons', require('./routes/coupons'));
-app.use('/api/banners', require('./routes/banners'));
+app.use('/api/banners', cachePublic(120), require('./routes/banners'));       // 2 min cache
 app.use('/api/admin/users', require('./routes/users'));
+app.use('/api/settings', require('./routes/settings'));
+app.use('/api/testimonials', require('./routes/testimonials'));
+app.use('/api/missing-orders', require('./routes/missingOrders'));
 
 // Error handlers
 app.use(notFound);

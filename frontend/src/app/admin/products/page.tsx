@@ -25,6 +25,7 @@ const EMPTY_FORM = {
   title: '', description: '', price: '', discountPrice: '', stock: '',
   category: '', subCategory: '', tags: '', material: '', weight: '', sku: '',
   isFeatured: false, isBestseller: false, isNewArrival: false, isActive: true,
+  metaTitle: '', metaDescription: '', metaKeywords: '',
 };
 
 export default function AdminProductsPage() {
@@ -98,6 +99,9 @@ export default function AdminProductsPage() {
       isBestseller: product.isBestseller,
       isNewArrival: product.isNewArrival,
       isActive: product.isActive,
+      metaTitle: (product as any).metaTitle || '',
+      metaDescription: (product as any).metaDescription || '',
+      metaKeywords: (product as any).metaKeywords || '',
     });
     setImageFiles([]);
     setModalOpen(true);
@@ -214,7 +218,7 @@ export default function AdminProductsPage() {
       {/* DESKTOP: Table */}
       <div className="hidden sm:block bg-white border border-charcoal-100 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-sm min-w-[850px]">
             <thead className="bg-cream-50 border-b border-charcoal-100">
               <tr>
                 <th className="text-left px-4 py-3 text-xs text-charcoal-500 uppercase tracking-wider">Product</th>
@@ -452,6 +456,27 @@ export default function AdminProductsPage() {
                         </div>
                       </div>
                     )}
+                  </div>
+
+                  {/* SEO Meta Fields */}
+                  <div className="border-t border-cream-200 pt-4 space-y-4">
+                    <p className="text-xs font-semibold text-charcoal-500 uppercase tracking-widest">SEO Meta (Product Level)</p>
+                    {[
+                      { label: 'Meta Title', key: 'metaTitle', placeholder: 'SEO title for this product' },
+                      { label: 'Meta Description', key: 'metaDescription', placeholder: 'SEO description for this product' },
+                      { label: 'Meta Keywords (comma separated)', key: 'metaKeywords', placeholder: 'gold ring, diamond, jewellery' },
+                    ].map(({ label, key, placeholder }) => (
+                      <div key={key}>
+                        <label className="block text-xs text-charcoal-600 mb-1.5 uppercase tracking-wide">{label}</label>
+                        <input
+                          type="text"
+                          value={form[key as keyof typeof form] as string}
+                          onChange={e => setForm(p => ({ ...p, [key]: e.target.value }))}
+                          placeholder={placeholder}
+                          className="w-full bg-cream-50 border border-cream-200 text-charcoal-900 text-sm px-3 py-2.5 focus:outline-none focus:border-gold-400 placeholder-charcoal-400"
+                        />
+                      </div>
+                    ))}
                   </div>
 
                   {/* Checkboxes */}

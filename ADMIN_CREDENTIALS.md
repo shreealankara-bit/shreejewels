@@ -132,7 +132,7 @@ ADMIN_EMAIL=admin@shreejewels.com
 ADMIN_PASSWORD=Admin@123456
 DATABASE_URL=postgresql://...
 GOOGLE_CLIENT_ID=your_client_id
-RAZORPAY_KEY_ID=your_key_id
+CASHFREE_APP_ID=your_app_id
 ```
 
 ### Database Connection

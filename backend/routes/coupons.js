@@ -3,7 +3,7 @@ const router = express.Router();
 const { validateCoupon, getCoupons, createCoupon, updateCoupon, deleteCoupon } = require('../controllers/couponController');
 const { protect, adminOnly } = require('../middleware/auth');
 
-router.post('/validate', protect, validateCoupon);
+router.post('/validate', validateCoupon);
 router.get('/admin', protect, adminOnly, getCoupons);
 router.post('/admin', protect, adminOnly, createCoupon);
 router.put('/admin/:id', protect, adminOnly, updateCoupon);

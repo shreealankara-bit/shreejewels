@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { categoryAPI, productAPI } from '@/lib/api';
 
 type Product = {
@@ -201,7 +201,7 @@ export default function CuratedCategoryShowcase() {
   }, [activeSubCategory]);
 
   if (loading) {
-    return <section className="curated-wrap py-20"><div className="text-center text-charcoal-500">Loading Collections...</div></section>;
+    return <div style={{ height: '1px' }} aria-hidden="true" />;
   }
 
   if (sections.length === 0) return null;
@@ -244,9 +244,18 @@ export default function CuratedCategoryShowcase() {
             >
               <span className="curated-circle-img">
                 {category.image ? (
-                  <Image src={category.image} alt={category.name} width={120} height={120} className="object-cover h-full w-full" />
+                  <Image
+                    src={category.image}
+                    alt={category.name}
+                    width={120}
+                    height={120}
+                    className="object-cover h-full w-full"
+                    loading="lazy"
+                    quality={75}
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                  />
                 ) : (
-                  <div className="w-[120px] h-[120px] bg-cream-100 flex items-center justify-center text-charcoal-400 font-display text-xl">{category.name.charAt(0)}</div>
+                  <div className="w-full h-full flex items-center justify-center text-maroon-400 font-display text-xl" style={{background:'var(--brand-cream)'}}>{category.name.charAt(0)}</div>
                 )}
               </span>
               <span className="curated-circle-label">{category.name}</span>
@@ -265,12 +274,31 @@ export default function CuratedCategoryShowcase() {
 
       <div className="curated-products">
         {products.map((product) => {
-          const image = product.images?.[0]?.url || '/placeholder.jpg';
+          const image = product.images?.[0]?.url || 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=700&h=875&fit=crop&q=75';
           const tag = product.tags?.[0];
           return (
-            <Link key={product._id} href={`/products/${product.slug}`} className="curated-product">
+            <Link 
+              key={product._id} 
+              href={`/products/${product.slug}`} 
+              className="curated-product"
+              prefetch={true}
+              onMouseEnter={() => {
+                productAPI.getBySlug(product.slug).catch(() => {});
+              }}
+            >
               <div className="curated-product-image">
-                <Image src={image} alt={product.title} fill sizes="(max-width: 768px) 45vw, 20vw" className="object-cover" />
+                <Image
+                  src={image}
+                  alt={product.title}
+                  fill
+                  sizes="(max-width:640px) 45vw, (max-width:900px) 30vw, 20vw"
+                  className="object-cover"
+                  loading="lazy"
+                  quality={80}
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=700&h=875&fit=crop&q=75';
+                  }}
+                />
                 {tag && <span className="curated-product-label capitalize">{tag}</span>}
               </div>
               <p className="curated-product-title line-clamp-1">{product.title}</p>

@@ -2,7 +2,19 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { orderAPI, productAPI } from '@/lib/api';
+import api, { orderAPI, productAPI, categoryAPI, couponAPI, bannerAPI } from '@/lib/api';
+
+const PREFETCH_MAP: Record<string, () => void> = {
+  '/admin/products': () => { productAPI.getAll().catch(() => {}); },
+  '/admin/products?stock=0': () => { productAPI.getAll({ stock: 0 }).catch(() => {}); },
+  '/admin/categories': () => { categoryAPI.getAll().catch(() => {}); },
+  '/admin/banners': () => { bannerAPI.getAll().catch(() => {}); },
+  '/admin/coupons': () => { couponAPI.getAll().catch(() => {}); },
+  '/admin/orders': () => { orderAPI.getAllOrders().catch(() => {}); },
+  '/admin/orders?status=placed': () => { orderAPI.getAllOrders({ status: 'placed' }).catch(() => {}); },
+  '/admin/users': () => { api.get('/admin/users').catch(() => {}); },
+};
+
 import {
   ShoppingCart, Package, TrendingUp, DollarSign,
   AlertCircle, Clock, Tag, Image as ImageIcon, Ticket, Users, CheckCircle, BarChart2
@@ -58,7 +70,12 @@ export default function AdminDashboard() {
         </div>
       </div>
       {href && (
-        <Link href={href} className="text-xs text-gold-500 hover:underline mt-3 inline-block">
+        <Link
+          href={href}
+          onMouseEnter={() => PREFETCH_MAP[href]?.()}
+          onTouchStart={() => PREFETCH_MAP[href]?.()}
+          className="text-xs text-gold-500 hover:underline mt-3 inline-block"
+        >
           View details →
         </Link>
       )}
@@ -162,6 +179,8 @@ export default function AdminDashboard() {
           <Link
             key={href}
             href={href}
+            onMouseEnter={() => PREFETCH_MAP[href]?.()}
+            onTouchStart={() => PREFETCH_MAP[href]?.()}
             className="bg-white border border-charcoal-100 hover:border-gold-300 hover:shadow-md p-3 sm:p-4 text-center transition-all group relative"
           >
             {badge != null && badge > 0 && (

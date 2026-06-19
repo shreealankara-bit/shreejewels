@@ -237,7 +237,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
             <div className="border-t border-charcoal-100 pt-4 space-y-2 text-xs text-charcoal-500">
               <p>🚚 Free shipping on orders above ₹999</p>
               <p>🔄 Easy 7-day returns</p>
-              <p>🔒 100% secure payment via Razorpay</p>
+              <p>🔒 100% secure payment via Cashfree</p>
             </div>
           </div>
         </div>

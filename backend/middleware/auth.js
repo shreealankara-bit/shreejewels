@@ -14,21 +14,22 @@ const protect = asyncHandler(async (req, res, next) => {
     throw new Error('Not authorized, no token');
   }
 
+  let decoded;
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await prisma.user.findUnique({ where: { id: decoded.id } });
-
-    if (!user || !user.isActive) {
-      res.status(401);
-      throw new Error('User not found or deactivated');
-    }
-
-    req.user = { ...user, _id: user.id };
-    next();
-  } catch (error) {
+    decoded = jwt.verify(token, process.env.JWT_SECRET);
+  } catch (err) {
     res.status(401);
-    throw new Error('Not authorized, token failed');
+    throw new Error('Not authorized, token invalid or expired');
   }
+
+  const user = await prisma.user.findUnique({ where: { id: decoded.id } });
+  if (!user || !user.isActive) {
+    res.status(401);
+    throw new Error('User not found or account deactivated');
+  }
+
+  req.user = { ...user, _id: user.id };
+  next();
 });
 
 const adminOnly = (req, res, next) => {

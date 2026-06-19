@@ -1,8 +1,45 @@
 const asyncHandler = require('express-async-handler');
 const prisma = require('../config/prisma');
+const { calculateCouponDiscount } = require('../utils/couponRules');
+
+const normalizeStringArray = (value) => (
+  Array.isArray(value)
+    ? value.map((item) => String(item).trim()).filter(Boolean)
+    : []
+);
+
+const normalizeCouponData = (body) => ({
+  ...(body.description !== undefined ? { description: body.description || '' } : {}),
+  ...(body.discountType !== undefined ? { discountType: body.discountType } : {}),
+  ...(body.value !== undefined ? { value: Number(body.value) } : {}),
+  ...(body.minOrderAmount !== undefined ? { minOrderAmount: Number(body.minOrderAmount) || 0 } : {}),
+  ...(body.maxDiscount !== undefined ? { maxDiscount: body.maxDiscount ? Number(body.maxDiscount) : null } : {}),
+  ...(body.expiry !== undefined ? { expiry: new Date(body.expiry) } : {}),
+  ...(body.usageLimit !== undefined ? { usageLimit: body.usageLimit ? Number(body.usageLimit) : null } : {}),
+  ...(body.isActive !== undefined ? { isActive: Boolean(body.isActive) } : {}),
+  ...(body.applicableCategories !== undefined ? { applicableCategories: normalizeStringArray(body.applicableCategories) } : {}),
+  ...(body.applicableProductTypes !== undefined ? { applicableProductTypes: normalizeStringArray(body.applicableProductTypes) } : {}),
+  ...(body.applicableProductTags !== undefined ? { applicableProductTags: normalizeStringArray(body.applicableProductTags).map((tag) => tag.toLowerCase()) } : {}),
+  ...(body.minProductPrice !== undefined ? { minProductPrice: body.minProductPrice ? Number(body.minProductPrice) : null } : {}),
+  ...(body.maxProductPrice !== undefined ? { maxProductPrice: body.maxProductPrice ? Number(body.maxProductPrice) : null } : {}),
+});
+
+const loadCartProducts = async (items = []) => {
+  if (!Array.isArray(items) || items.length === 0) return [];
+  const ids = [...new Set(items.map((item) => item.productId).filter(Boolean))];
+  const products = await prisma.product.findMany({ where: { id: { in: ids } } });
+  const productMap = new Map(products.map((product) => [product.id, product]));
+
+  return items
+    .map((item) => {
+      const product = productMap.get(item.productId);
+      return product ? { product, quantity: Number(item.quantity) || 1 } : null;
+    })
+    .filter(Boolean);
+};
 
 const validateCoupon = asyncHandler(async (req, res) => {
-  const { code, subtotal } = req.body;
+  const { code, subtotal, items } = req.body;
   if (!code) {
     res.status(400);
     throw new Error('Coupon code required');
@@ -17,28 +54,24 @@ const validateCoupon = asyncHandler(async (req, res) => {
     throw new Error('Invalid coupon code');
   }
 
-  const now = new Date();
-  if (coupon.expiry < now) { res.status(400); throw new Error('Coupon has expired'); }
-  if (coupon.usageLimit && coupon.usedCount >= coupon.usageLimit) { res.status(400); throw new Error('Coupon usage limit reached'); }
-
-  const usedBy = Array.isArray(coupon.usedBy) ? coupon.usedBy : [];
-  const userId = req.user.id || req.user._id;
-  if (usedBy.includes(userId)) { res.status(400); throw new Error('You have already used this coupon'); }
-  if (Number(subtotal) < coupon.minOrderAmount) { res.status(400); throw new Error(`Minimum order amount is ₹${coupon.minOrderAmount}`); }
-
-  let discount = 0;
-  if (coupon.discountType === 'percentage') {
-    discount = Math.round((Number(subtotal) * coupon.value) / 100);
-    if (coupon.maxDiscount) discount = Math.min(discount, coupon.maxDiscount);
-  } else {
-    discount = coupon.value;
-  }
+  const products = await loadCartProducts(items);
+  const result = calculateCouponDiscount({
+    coupon,
+    subtotal: Number(subtotal),
+    products,
+    userId: req.user?.id || req.user?._id,
+  });
 
   res.json({
     success: true,
-    coupon: { code: coupon.code, discountType: coupon.discountType, value: coupon.value },
-    discount,
-    finalAmount: Number(subtotal) - discount,
+    coupon: {
+      code: coupon.code,
+      discountType: coupon.discountType,
+      value: coupon.value,
+      applicableSubtotal: result.applicableSubtotal,
+    },
+    discount: result.discount,
+    finalAmount: result.finalAmount,
   });
 });
 
@@ -48,7 +81,7 @@ const getCoupons = asyncHandler(async (req, res) => {
 });
 
 const createCoupon = asyncHandler(async (req, res) => {
-  const { code, description, discountType, value, minOrderAmount, maxDiscount, expiry, usageLimit, applicableCategories } = req.body;
+  const { code, discountType, value, expiry } = req.body;
   if (!code || !discountType || !value || !expiry) { res.status(400); throw new Error('Required fields missing'); }
 
   const exists = await prisma.coupon.findUnique({ where: { code: String(code).toUpperCase() } });
@@ -57,14 +90,7 @@ const createCoupon = asyncHandler(async (req, res) => {
   const coupon = await prisma.coupon.create({
     data: {
       code: String(code).toUpperCase(),
-      description: description || '',
-      discountType,
-      value: Number(value),
-      minOrderAmount: Number(minOrderAmount) || 0,
-      maxDiscount: maxDiscount ? Number(maxDiscount) : null,
-      expiry: new Date(expiry),
-      usageLimit: usageLimit ? Number(usageLimit) : null,
-      applicableCategories: applicableCategories || [],
+      ...normalizeCouponData(req.body),
     },
   });
 
@@ -75,13 +101,7 @@ const updateCoupon = asyncHandler(async (req, res) => {
   const coupon = await prisma.coupon.findUnique({ where: { id: req.params.id } });
   if (!coupon) { res.status(404); throw new Error('Coupon not found'); }
 
-  const fields = ['description', 'discountType', 'value', 'minOrderAmount', 'maxDiscount', 'usageLimit', 'isActive'];
-  const data = {};
-  fields.forEach((f) => {
-    if (req.body[f] !== undefined) data[f] = req.body[f];
-  });
-  if (req.body.expiry !== undefined) data.expiry = new Date(req.body.expiry);
-
+  const data = normalizeCouponData(req.body);
   const updated = await prisma.coupon.update({ where: { id: req.params.id }, data });
   res.json({ success: true, coupon: { ...updated, _id: updated.id } });
 });

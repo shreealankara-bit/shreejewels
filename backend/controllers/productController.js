@@ -137,7 +137,7 @@ const getProductBySlug = asyncHandler(async (req, res) => {
 });
 
 const createProduct = asyncHandler(async (req, res) => {
-  const { title, description, price, discountPrice, category, subCategory, stock, tags, material, weight, sku, isFeatured, isBestseller, isNewArrival } = req.body;
+  const { title, description, price, discountPrice, category, subCategory, stock, tags, material, weight, sku, isFeatured, isBestseller, isNewArrival, metaTitle, metaDescription, metaKeywords } = req.body;
   if (!title || !price || !category) {
     res.status(400);
     throw new Error('Title, price, and category are required');
@@ -176,6 +176,9 @@ const createProduct = asyncHandler(async (req, res) => {
       isFeatured: isFeatured === 'true',
       isBestseller: isBestseller === 'true',
       isNewArrival: isNewArrival === 'true',
+      metaTitle: metaTitle || '',
+      metaDescription: metaDescription || '',
+      metaKeywords: metaKeywords || '',
     },
     include: {
       category: { select: { id: true, name: true, slug: true } },
@@ -216,6 +219,7 @@ const updateProduct = asyncHandler(async (req, res) => {
     ...(req.body.sku !== undefined ? { sku: req.body.sku || null } : {}),
     ...(req.body.metaTitle !== undefined ? { metaTitle: req.body.metaTitle } : {}),
     ...(req.body.metaDescription !== undefined ? { metaDescription: req.body.metaDescription } : {}),
+    ...(req.body.metaKeywords !== undefined ? { metaKeywords: req.body.metaKeywords } : {}),
     ...(req.body.tags !== undefined ? { tags: Array.isArray(req.body.tags) ? req.body.tags : req.body.tags.split(',').map((t) => t.trim()) } : {}),
     ...(req.body.isFeatured !== undefined ? { isFeatured: toBool(req.body.isFeatured) } : {}),
     ...(req.body.isBestseller !== undefined ? { isBestseller: toBool(req.body.isBestseller) } : {}),

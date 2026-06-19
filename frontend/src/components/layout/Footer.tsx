@@ -10,7 +10,7 @@ export default function Footer() {
         <div>
           <div className="footer-logo">
             <Link href="/">
-              <Image src="/Logo_Main.png" alt="Shree Alankara" width={140} height={70} className="h-16 w-auto object-contain" />
+              <Image src="/Logo_Main.png" alt="Shree Alankara" width={220} height={110} className="h-20 w-auto object-contain" />
             </Link>
           </div>
           <p className="footer-desc">Premium jewellery for every occasion — from everyday elegance to bridal splendour. Crafted with love, delivered with care.</p>

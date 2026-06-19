@@ -32,7 +32,7 @@ export default function AdminUsersPage() {
       </div>
 
       <div className="bg-white border border-cream-200 overflow-x-auto">
-        <table className="w-full text-sm">
+        <table className="w-full text-sm min-w-[650px]">
           <thead className="bg-cream-50 border-b border-cream-200">
             <tr>
               {['User', 'Role', 'Login Method', 'Joined', 'Actions'].map(h => (

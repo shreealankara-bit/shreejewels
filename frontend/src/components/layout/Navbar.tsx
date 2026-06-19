@@ -107,7 +107,7 @@ export default function Navbar() {
 
           {/* Logo */}
           <Link href="/" className="navbar-logo">
-            <Image src="/Logo_Main.png" alt="Shree Alankara" width={160} height={80} className="h-20 w-auto object-contain" priority />
+            <Image src="/Logo_Main.png" alt="Shree Alankara" width={240} height={120} className="h-24 w-auto object-contain" style={{width:'auto'}} priority />
           </Link>
 
           {/* Desktop nav */}
@@ -257,7 +257,9 @@ export default function Navbar() {
               className="mobile-drawer"
             >
               <div className="mobile-drawer-header">
-                <Image src="/Logo_Main.png" alt="Shree Alankara" width={130} height={65} className="h-16 w-auto object-contain" />
+                <Link href="/" onClick={() => setMobileOpen(false)}>
+                  <Image src="/Logo_Main.png" alt="Shree Alankara" width={180} height={90} className="h-16 w-auto object-contain" style={{width:'auto'}} />
+                </Link>
                 <button onClick={() => setMobileOpen(false)}><X size={20} /></button>
               </div>
 
