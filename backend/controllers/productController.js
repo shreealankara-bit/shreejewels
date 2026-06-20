@@ -30,7 +30,8 @@ const getProducts = asyncHandler(async (req, res) => {
   } = req.query;
 
   const where = {
-    ...(active === 'true' ? { isActive: true } : {}),
+    // 'all' = no filter, 'true' = active only, 'false' = inactive only
+    ...(active === 'all' ? {} : active === 'false' ? { isActive: false } : { isActive: true }),
     ...(category ? { categoryId: category } : {}),
     ...(subCategory ? { subCategoryId: subCategory } : {}),
     ...(featured === 'true' ? { isFeatured: true } : {}),

@@ -47,9 +47,12 @@ export default function AdminProductsPage() {
   const fetchProducts = useCallback(async () => {
     setLoading(true);
     try {
-      const params: any = { page, limit: 20, active: filterActive || undefined };
+      // Admin needs to see ALL products (active + hidden) — pass no active filter
+      const params: any = { page, limit: 20 };
       if (search) params.search = search;
-      const res = await productAPI.getAll({ ...params, active: undefined });
+      // filterActive: '' = all, 'true' = only active, 'false' = only hidden
+      if (filterActive !== '') params.active = filterActive;
+      const res = await productAPI.getAll(params);
       setProducts(res.data.products || []);
       setPagination(res.data.pagination || { page: 1, pages: 1, total: 0 });
     } catch { toast.error('Failed to load products'); }
@@ -130,13 +133,20 @@ export default function AdminProductsPage() {
   };
 
   const handleDelete = async (id: string) => {
+    // Optimistically remove from UI immediately
+    setProducts(prev => prev.filter(p => p._id !== id));
+    setPagination(prev => ({ ...prev, total: Math.max(0, prev.total - 1) }));
+    setDeleteId(null);
     try {
       await productAPI.delete(id);
       toast.success('Product deleted');
+      // Refresh from server to get accurate count/pagination
       fetchProducts();
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Delete failed');
-    } finally { setDeleteId(null); }
+      // Revert on failure
+      fetchProducts();
+    }
   };
 
   const topCategories = categories.filter((c: any) => !c.parentCategory);
