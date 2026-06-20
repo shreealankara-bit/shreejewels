@@ -43,6 +43,7 @@ export default function AdminProductsPage() {
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [saving, setSaving] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const fetchProducts = useCallback(async () => {
     setLoading(true);
@@ -133,6 +134,8 @@ export default function AdminProductsPage() {
   };
 
   const handleDelete = async (id: string) => {
+    if (deleting) return; // prevent double-call
+    setDeleting(true);
     // Optimistically remove from UI immediately
     setProducts(prev => prev.filter(p => p._id !== id));
     setPagination(prev => ({ ...prev, total: Math.max(0, prev.total - 1) }));
@@ -146,6 +149,8 @@ export default function AdminProductsPage() {
       toast.error(err.response?.data?.message || 'Delete failed');
       // Revert on failure
       fetchProducts();
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -537,7 +542,7 @@ export default function AdminProductsPage() {
               <p className="text-sm text-charcoal-600 mb-5">This will permanently delete this product and all its images.</p>
               <div className="flex gap-3">
                 <button onClick={() => setDeleteId(null)} className="flex-1 py-2.5 text-sm border border-cream-200 text-charcoal-600 hover:text-charcoal-900 transition-colors">Cancel</button>
-                <button onClick={() => handleDelete(deleteId)} id="confirm-delete-btn" className="flex-1 py-2.5 text-sm bg-red-600 hover:bg-red-700 text-white font-medium transition-colors">Delete</button>
+                <button onClick={() => handleDelete(deleteId)} id="confirm-delete-btn" disabled={deleting} className="flex-1 py-2.5 text-sm bg-red-600 hover:bg-red-700 text-white font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed">{deleting ? 'Deleting...' : 'Delete'}</button>
               </div>
             </motion.div>
           </>
