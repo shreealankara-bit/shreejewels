@@ -2,8 +2,10 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { categoryAPI, productAPI } from '@/lib/api';
+
+const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=700&h=875&fit=crop&q=75';
 
 type Product = {
   title: string;
@@ -169,10 +171,17 @@ export default function CuratedCategoryShowcase() {
         setSections(rootCategories);
         
         if (rootCategories.length > 0) {
-          setActiveSectionId(rootCategories[0]._id);
-          if (rootCategories[0].subcategories?.length > 0) {
-            setActiveSubCategoryId(rootCategories[0].subcategories[0]._id);
-          }
+          const firstSection = rootCategories[0];
+          const sectionName = firstSection.name?.toLowerCase() || '';
+          const wanted = sectionName.includes('western')
+            ? ['bracelets', 'clutches', 'hair accessories']
+            : sectionName.includes('traditional')
+              ? ['bangles', 'traditional earrings', 'earrings']
+              : [];
+          const firstSub = firstSection.subcategories?.find((sub: any) => wanted.includes(String(sub.name).trim().toLowerCase())) || firstSection.subcategories?.[0];
+
+          setActiveSectionId(firstSection._id);
+          if (firstSub) setActiveSubCategoryId(firstSub._id);
         }
       })
       .catch(() => {})
@@ -192,7 +201,27 @@ export default function CuratedCategoryShowcase() {
   }, [activeSubCategoryId]);
 
   const activeSection = useMemo(() => sections.find(s => s._id === activeSectionId) || null, [sections, activeSectionId]);
-  const activeSubCategory = useMemo(() => activeSection?.subcategories?.find((s: any) => s._id === activeSubCategoryId) || null, [activeSection, activeSubCategoryId]);
+  const visibleSubCategories = useMemo(() => {
+    const subs = activeSection?.subcategories || [];
+    const sectionName = activeSection?.name?.toLowerCase() || '';
+    const wanted = sectionName.includes('western')
+      ? ['bracelets', 'clutches', 'hair accessories']
+      : sectionName.includes('traditional')
+        ? ['bangles', 'traditional earrings', 'earrings']
+        : [];
+
+    if (!wanted.length) return subs;
+
+    const filtered = subs.filter((sub: any) => wanted.includes(String(sub.name).trim().toLowerCase()));
+    return filtered.length ? filtered : subs;
+  }, [activeSection]);
+  const activeSubCategory = useMemo(() => visibleSubCategories.find((s: any) => s._id === activeSubCategoryId) || visibleSubCategories[0] || null, [visibleSubCategories, activeSubCategoryId]);
+
+  useEffect(() => {
+    if (visibleSubCategories.length && !visibleSubCategories.some((sub: any) => sub._id === activeSubCategoryId)) {
+      setActiveSubCategoryId(visibleSubCategories[0]._id);
+    }
+  }, [visibleSubCategories, activeSubCategoryId]);
 
   // Extract tags/chips from metaDescription
   const chips = useMemo(() => {
@@ -217,7 +246,14 @@ export default function CuratedCategoryShowcase() {
             onClick={() => {
               setActiveSectionId(item._id);
               if (item.subcategories?.length > 0) {
-                setActiveSubCategoryId(item.subcategories[0]._id);
+                const sectionName = item.name?.toLowerCase() || '';
+                const wanted = sectionName.includes('western')
+                  ? ['bracelets', 'clutches', 'hair accessories']
+                  : sectionName.includes('traditional')
+                    ? ['bangles', 'traditional earrings', 'earrings']
+                    : [];
+                const nextSub = item.subcategories.find((sub: any) => wanted.includes(String(sub.name).trim().toLowerCase())) || item.subcategories[0];
+                setActiveSubCategoryId(nextSub._id);
               }
             }}
           >
@@ -233,9 +269,9 @@ export default function CuratedCategoryShowcase() {
         </div>
       )}
 
-      {activeSection?.subcategories && (
+      {visibleSubCategories.length > 0 && (
         <div className="curated-circles" role="tablist" aria-label="Category list">
-          {activeSection.subcategories.map((category: any) => (
+          {visibleSubCategories.map((category: any) => (
             <button
               key={category._id}
               type="button"
@@ -252,7 +288,7 @@ export default function CuratedCategoryShowcase() {
                     className="object-cover h-full w-full"
                     loading="lazy"
                     quality={75}
-                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                    onError={(e) => { (e.currentTarget as HTMLImageElement).src = FALLBACK_IMAGE; }}
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-maroon-400 font-display text-xl" style={{background:'var(--brand-cream)'}}>{category.name.charAt(0)}</div>
@@ -274,7 +310,7 @@ export default function CuratedCategoryShowcase() {
 
       <div className="curated-products">
         {products.map((product) => {
-          const image = product.images?.[0]?.url || 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=700&h=875&fit=crop&q=75';
+          const image = product.images?.[0]?.url || FALLBACK_IMAGE;
           const tag = product.tags?.[0];
           return (
             <Link 
@@ -296,7 +332,7 @@ export default function CuratedCategoryShowcase() {
                   loading="lazy"
                   quality={80}
                   onError={(e) => {
-                    (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=700&h=875&fit=crop&q=75';
+                    (e.currentTarget as HTMLImageElement).src = FALLBACK_IMAGE;
                   }}
                 />
                 {tag && <span className="curated-product-label capitalize">{tag}</span>}

@@ -10,7 +10,7 @@ export default function AdminUsersPage() {
   const [search, setSearch] = useState('');
 
   useEffect(() => {
-    api.get('/admin/users', { params: { search } })
+    api.get('/admin/users', { params: { search, role: 'admin,superadmin' } })
       .then(res => setUsers(res.data.users || []))
       .catch(() => toast.error('Failed to load users'))
       .finally(() => setLoading(false));
@@ -20,8 +20,8 @@ export default function AdminUsersPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl font-display text-charcoal-900">Users</h1>
-          <p className="text-sm text-charcoal-500 mt-0.5">{users.length} customers</p>
+          <h1 className="text-xl font-display text-charcoal-900">Admin Users</h1>
+          <p className="text-sm text-charcoal-500 mt-0.5">{users.length} admin user{users.length !== 1 ? 's' : ''}</p>
         </div>
       </div>
 
@@ -44,7 +44,7 @@ export default function AdminUsersPage() {
             {loading ? Array.from({ length: 6 }).map((_, i) => (
               <tr key={i} className="animate-pulse"><td colSpan={5} className="px-4 py-4"><div className="h-4 bg-cream-50 rounded" /></td></tr>
             )) : users.length === 0 ? (
-              <tr><td colSpan={5} className="text-center py-12 text-charcoal-500">No users found</td></tr>
+              <tr><td colSpan={5} className="text-center py-12 text-charcoal-500">No admin users found</td></tr>
             ) : users.map(user => (
               <tr key={user._id} className="hover:bg-cream-50/50 transition-colors">
                 <td className="px-4 py-3">

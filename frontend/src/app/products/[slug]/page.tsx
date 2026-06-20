@@ -10,6 +10,8 @@ import { useAuth } from '@/context/AuthContext';
 import ProductCard from '@/components/products/ProductCard';
 import toast from 'react-hot-toast';
 
+const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=900&h=900&fit=crop&q=80';
+
 export default function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const resolvedParams = React.use(params);
   const { slug } = resolvedParams;
@@ -17,6 +19,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
   const [related, setRelated] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeImage, setActiveImage] = useState(0);
+  const [brokenImages, setBrokenImages] = useState<Record<number, boolean>>({});
   const [quantity, setQuantity] = useState(1);
   const [addedToCart, setAddedToCart] = useState(false);
   const { addToCart, toggleCart } = useCart();
@@ -51,11 +54,15 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
   );
 
   const images = product.images || [];
+  const getImageUrl = (index: number) => {
+    const url = images[index]?.url;
+    return brokenImages[index] || !url ? FALLBACK_IMAGE : url;
+  };
   const actualPrice = product.discountPrice > 0 ? product.discountPrice : product.price;
   const inWishlist = user?.wishlist?.includes(product._id);
 
   const handleAddToCart = () => {
-    addToCart({ productId: product._id, title: product.title, image: images[0]?.url, price: product.price, discountPrice: product.discountPrice, quantity, stock: product.stock });
+    addToCart({ productId: product._id, title: product.title, image: getImageUrl(0), price: product.price, discountPrice: product.discountPrice, quantity, stock: product.stock });
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 2000);
   };
@@ -99,12 +106,13 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
           <div className="space-y-3">
             <div className="relative aspect-square overflow-hidden bg-cream-100 group">
               <Image
-                src={images[activeImage]?.url || '/placeholder.jpg'}
+                src={getImageUrl(activeImage)}
                 alt={product.title}
                 fill
                 className="object-cover"
                 sizes="(max-width: 768px) 100vw, 50vw"
                 priority
+                onError={() => setBrokenImages((prev) => ({ ...prev, [activeImage]: true }))}
               />
               {/* Nav arrows */}
               {images.length > 1 && (
@@ -134,7 +142,13 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
                     onClick={() => setActiveImage(i)}
                     className={`relative w-16 h-16 flex-shrink-0 border-2 transition-all ${i === activeImage ? 'border-gold-500' : 'border-charcoal-100 hover:border-charcoal-300'}`}
                   >
-                    <Image src={img.url} alt="" fill className="object-cover" />
+                    <Image
+                      src={getImageUrl(i)}
+                      alt={`${product.title} thumbnail ${i + 1}`}
+                      fill
+                      className="object-cover"
+                      onError={() => setBrokenImages((prev) => ({ ...prev, [i]: true }))}
+                    />
                   </button>
                 ))}
               </div>
@@ -189,7 +203,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
             {product.tags?.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 {product.tags.map((tag: string) => (
-                  <Link key={tag} href={`/products?tags=${tag}`}
+                  <Link key={tag} href={`/products?tags=${encodeURIComponent(tag)}`}
                     className="text-xs border border-charcoal-200 text-charcoal-600 px-2.5 py-1 hover:border-gold-400 hover:text-gold-500 transition-colors capitalize">
                     {tag.replace(/-/g, ' ')}
                   </Link>

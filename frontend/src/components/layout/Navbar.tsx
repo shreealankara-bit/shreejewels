@@ -7,6 +7,7 @@ import { Search, ShoppingBag, User, Heart, Menu, X, ChevronDown } from 'lucide-r
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { categoryAPI } from '@/lib/api';
+import { categoryHref, subCategoryHref } from '@/lib/categoryLinks';
 import { useRouter } from 'next/navigation';
 
 interface Category {
@@ -57,15 +58,8 @@ export default function Navbar() {
     if (searchOpen && searchRef.current) searchRef.current.focus();
   }, [searchOpen]);
 
-  // Static nav for when categories aren't loaded yet
-  const STATIC_NAV = [
-    { label: 'Home', href: '/' },
-    { label: 'Shop By Category', href: '/products', hasDropdown: true },
-    { label: 'New Arrivals', href: '/products?newArrival=true' },
-    { label: 'Western', href: '/products?category=cmp16bwkq0000xivjquaqr686' },
-    { label: 'Traditional', href: '/products?category=cmp16cd6z001pxivjnbjyijco' },
-    { label: 'Best Sellers', href: '/products?bestseller=true' },
-  ];
+  const westernHref = categoryHref(categories, ['Western', 'Western Collection'], '/products?search=western');
+  const traditionalHref = categoryHref(categories, ['Traditional / Indo Western', 'Traditional', 'Traditional Jewellery'], '/products?search=traditional');
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -139,7 +133,7 @@ export default function Navbar() {
                             {cat.name}
                           </Link>
                           {cat.subcategories?.slice(0, 6).map(sub => (
-                            <Link key={sub._id} href={`/products?category=${cat._id}&subCategory=${sub._id}`} className="mega-link">
+                            <Link key={sub._id} href={subCategoryHref(cat, sub)} className="mega-link">
                               {sub.name}
                             </Link>
                           ))}
@@ -152,8 +146,8 @@ export default function Navbar() {
             </div>
 
             <Link href="/products?newArrival=true" className="nav-link">New Launch</Link>
-            <Link href="/products?category=cmp16bwkq0000xivjquaqr686" className="nav-link">Western</Link>
-            <Link href="/products?category=cmp16cd6z001pxivjnbjyijco" className="nav-link">Traditional</Link>
+            <Link href={westernHref} className="nav-link">Western</Link>
+            <Link href={traditionalHref} className="nav-link">Traditional</Link>
             <Link href="/products?bestseller=true" className="nav-link">Best Sellers</Link>
           </nav>
 
@@ -188,7 +182,6 @@ export default function Navbar() {
                           { label: 'My Orders', href: '/orders' },
                           { label: 'Wishlist', href: '/wishlist' },
                           { label: 'My Profile', href: '/profile' },
-                          ...(user?.role === 'admin' || user?.role === 'superadmin' ? [{ label: 'Admin Panel', href: '/admin' }] : []),
                         ].map(l => (
                           <Link key={l.href} href={l.href} onClick={() => setUserMenuOpen(false)} className="user-dropdown-link">{l.label}</Link>
                         ))}
@@ -279,8 +272,8 @@ export default function Navbar() {
                 {[
                   { label: 'Home', href: '/' },
                   { label: 'New Launch', href: '/products?newArrival=true' },
-                  { label: 'Western Jewellery', href: '/products?category=cmp16bwkq0000xivjquaqr686' },
-                  { label: 'Traditional Jewellery', href: '/products?category=cmp16cd6z001pxivjnbjyijco' },
+                  { label: 'Western Jewellery', href: westernHref },
+                  { label: 'Traditional Jewellery', href: traditionalHref },
                   { label: 'Best Sellers', href: '/products?bestseller=true' },
                   { label: 'All Products', href: '/products' },
                 ].map(l => (
@@ -291,7 +284,7 @@ export default function Navbar() {
                   <div key={cat._id}>
                     <Link href={`/products?category=${cat._id}`} onClick={() => setMobileOpen(false)} className="mobile-nav-link mobile-nav-cat">{cat.name}</Link>
                     {cat.subcategories?.map(sub => (
-                      <Link key={sub._id} href={`/products?subCategory=${sub._id}`} onClick={() => setMobileOpen(false)} className="mobile-nav-sub">— {sub.name}</Link>
+                      <Link key={sub._id} href={subCategoryHref(cat, sub)} onClick={() => setMobileOpen(false)} className="mobile-nav-sub">— {sub.name}</Link>
                     ))}
                   </div>
                 ))}

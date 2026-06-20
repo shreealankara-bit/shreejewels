@@ -2,24 +2,42 @@ const asyncHandler = require('express-async-handler');
 const { OAuth2Client } = require('google-auth-library');
 const bcrypt = require('bcryptjs');
 const prisma = require('../config/prisma');
-const { sendTokenResponse } = require('../utils/generateToken');
+const { generateToken, sendTokenResponse } = require('../utils/generateToken');
 
-const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const getGoogleCallbackUrl = () =>
+  process.env.GOOGLE_CALLBACK_URL || 'https://api.shreealankara.com/api/auth/google/callback';
 
-const googleLogin = asyncHandler(async (req, res) => {
-  const { idToken } = req.body;
-  if (!idToken) {
-    res.status(400);
-    throw new Error('Google ID token is required');
+const getFrontendUrl = () =>
+  (process.env.FRONTEND_URL || 'https://shreejewels.vercel.app').replace(/\/+$/, '');
+
+const setAuthCookie = (user, res) => {
+  const token = generateToken(user.id || user._id);
+  const sameSite = String(process.env.COOKIE_SAMESITE || 'lax').toLowerCase();
+  const normalizedSameSite = ['lax', 'strict', 'none'].includes(sameSite) ? sameSite : 'lax';
+  const secureCookie = process.env.NODE_ENV === 'production' || normalizedSameSite === 'none';
+  const options = {
+    httpOnly: true,
+    secure: secureCookie,
+    sameSite: normalizedSameSite,
+    maxAge: 30 * 24 * 60 * 60 * 1000,
+    path: '/',
+  };
+
+  if (process.env.COOKIE_DOMAIN) {
+    options.domain = process.env.COOKIE_DOMAIN;
   }
 
-  const ticket = await googleClient.verifyIdToken({
-    idToken,
-    audience: process.env.GOOGLE_CLIENT_ID,
-  });
+  res.cookie('token', token, options);
+};
 
-  const { sub: googleId, email, name, picture } = ticket.getPayload();
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const googleOAuthClient = new OAuth2Client(
+  process.env.GOOGLE_CLIENT_ID,
+  process.env.GOOGLE_CLIENT_SECRET,
+  getGoogleCallbackUrl()
+);
 
+const findOrCreateGoogleUser = async ({ googleId, email, name, picture }) => {
   let user = await prisma.user.findFirst({
     where: { OR: [{ googleId }, { email }] },
   });
@@ -35,7 +53,68 @@ const googleLogin = asyncHandler(async (req, res) => {
     });
   }
 
-  user = await prisma.user.update({ where: { id: user.id }, data: { lastLogin: new Date() } });
+  return prisma.user.update({ where: { id: user.id }, data: { lastLogin: new Date() } });
+};
+
+const startGoogleOAuth = asyncHandler(async (req, res) => {
+  if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+    res.status(500);
+    throw new Error('Google OAuth is not configured');
+  }
+
+  const url = googleOAuthClient.generateAuthUrl({
+    access_type: 'offline',
+    prompt: 'select_account',
+    scope: ['openid', 'email', 'profile'],
+    redirect_uri: getGoogleCallbackUrl(),
+  });
+
+  res.redirect(url);
+});
+
+const googleOAuthCallback = asyncHandler(async (req, res) => {
+  const { code } = req.query;
+  if (!code) {
+    res.status(400);
+    throw new Error('Google authorization code is required');
+  }
+
+  const { tokens } = await googleOAuthClient.getToken({
+    code,
+    redirect_uri: getGoogleCallbackUrl(),
+  });
+
+  if (!tokens.id_token) {
+    res.status(400);
+    throw new Error('Google ID token was not returned');
+  }
+
+  const ticket = await googleOAuthClient.verifyIdToken({
+    idToken: tokens.id_token,
+    audience: process.env.GOOGLE_CLIENT_ID,
+  });
+
+  const { sub: googleId, email, name, picture } = ticket.getPayload();
+  const user = await findOrCreateGoogleUser({ googleId, email, name, picture });
+  setAuthCookie(user, res);
+  res.redirect(`${getFrontendUrl()}/?login=google`);
+});
+
+const googleLogin = asyncHandler(async (req, res) => {
+  const { idToken } = req.body;
+  if (!idToken) {
+    res.status(400);
+    throw new Error('Google ID token is required');
+  }
+
+  const ticket = await googleClient.verifyIdToken({
+    idToken,
+    audience: process.env.GOOGLE_CLIENT_ID,
+  });
+
+  const { sub: googleId, email, name, picture } = ticket.getPayload();
+
+  const user = await findOrCreateGoogleUser({ googleId, email, name, picture });
   sendTokenResponse(user, 200, res);
 });
 
@@ -100,8 +179,8 @@ const customerLogin = asyncHandler(async (req, res) => {
 });
 
 const registerCustomer = asyncHandler(async (req, res) => {
-  const { name, email, password } = req.body;
-  if (!name || !email || !password) {
+  const { name, email, phone, password } = req.body;
+  if (!name || !email || !phone || !password) {
     res.status(400);
     throw new Error('All fields required');
   }
@@ -114,7 +193,7 @@ const registerCustomer = asyncHandler(async (req, res) => {
 
   const hash = await bcrypt.hash(password, 12);
   const user = await prisma.user.create({
-    data: { name, email, password: hash, role: 'customer' },
+    data: { name, email, phone, password: hash, role: 'customer' },
   });
 
   sendTokenResponse(user, 201, res);
@@ -183,6 +262,8 @@ const updateProfile = asyncHandler(async (req, res) => {
 });
 
 module.exports = {
+  startGoogleOAuth,
+  googleOAuthCallback,
   googleLogin,
   adminLogin,
   customerLogin,

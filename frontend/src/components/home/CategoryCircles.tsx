@@ -45,7 +45,14 @@ export default function CategoryCircles() {
       {items.map((item, i) => (
         <Link key={i} href={item.href} className="cat-circle-item">
           <div className="cat-circle-img">
-            <Image src={item.img} alt={item.label} width={80} height={80} style={{ objectFit: 'cover', width: '100%', height: '100%' }} />
+            <Image
+              src={item.img}
+              alt={item.label}
+              width={80}
+              height={80}
+              style={{ objectFit: 'cover', width: '100%', height: '100%' }}
+              onError={(event) => { (event.currentTarget as HTMLImageElement).src = IMG.default; }}
+            />
           </div>
           <span className="cat-circle-label">{item.label}</span>
         </Link>

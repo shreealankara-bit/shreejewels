@@ -3,9 +3,13 @@ const prisma = require('../config/prisma');
 
 const getAllUsers = asyncHandler(async (req, res) => {
   const { search, page = 1, limit = 20, role } = req.query;
+  const roles = role
+    ? String(role).split(',').map((value) => value.trim()).filter(Boolean)
+    : [];
 
   const where = {
-    ...(role ? { role } : {}),
+    ...(roles.length === 1 ? { role: roles[0] } : {}),
+    ...(roles.length > 1 ? { role: { in: roles } } : {}),
     ...(search
       ? {
           OR: [
