@@ -14,7 +14,7 @@ const getOrCreateSettings = async () => {
 // GET /api/settings  — public (omits SMTP credentials)
 const getPublicSettings = asyncHandler(async (req, res) => {
   const s = await getOrCreateSettings();
-  const { smtpHost, smtpPort, smtpUser, smtpPass, smtpFrom, ...pub } = s;
+  const { smtpHost, smtpPort, smtpUser, smtpPass, smtpFrom, resendApiKey, ...pub } = s;
   res.json({ success: true, settings: pub });
 });
 
@@ -29,6 +29,7 @@ const updateSettings = asyncHandler(async (req, res) => {
   const {
     siteName, metaTitle, metaDescription, metaKeywords,
     smtpHost, smtpPort, smtpUser, smtpPass, smtpFrom,
+    resendApiKey, orderEmailSubject, orderEmailTemplate,
     aboutTitle, aboutContent,
   } = req.body;
 
@@ -46,6 +47,9 @@ const updateSettings = asyncHandler(async (req, res) => {
       ...(smtpUser !== undefined ? { smtpUser } : {}),
       ...(smtpPass !== undefined ? { smtpPass } : {}),
       ...(smtpFrom !== undefined ? { smtpFrom } : {}),
+      ...(resendApiKey !== undefined ? { resendApiKey } : {}),
+      ...(orderEmailSubject !== undefined ? { orderEmailSubject } : {}),
+      ...(orderEmailTemplate !== undefined ? { orderEmailTemplate } : {}),
       ...(aboutTitle !== undefined ? { aboutTitle } : {}),
       ...(aboutContent !== undefined ? { aboutContent } : {}),
     },

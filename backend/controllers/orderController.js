@@ -42,14 +42,10 @@ const buildOrderDisplayId = async () => {
 const sendOrderConfirmationEmail = async (order, userEmail, userName) => {
   try {
     const settings = await prisma.siteSettings.findFirst();
-    if (!settings?.smtpHost || !settings?.smtpUser || !settings?.smtpPass) return;
+    if (!settings?.resendApiKey || !settings?.smtpFrom) return;
 
-    const transporter = nodemailer.createTransport({
-      host: settings.smtpHost,
-      port: settings.smtpPort || 587,
-      secure: settings.smtpPort === 465,
-      auth: { user: settings.smtpUser, pass: settings.smtpPass },
-    });
+    const { Resend } = require('resend');
+    const resend = new Resend(settings.resendApiKey);
 
     const items = Array.isArray(order.items) ? order.items : [];
     const itemRows = items
@@ -62,43 +58,64 @@ const sendOrderConfirmationEmail = async (order, userEmail, userName) => {
       )
       .join('');
 
-    const html = `
-      <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;border:1px solid #f0e8d8;border-radius:8px;overflow:hidden;">
-        <div style="background:linear-gradient(135deg,#2e1111,#5c2828);padding:24px;text-align:center;">
-          <h1 style="color:#e8c97e;margin:0;font-size:22px;">${settings.siteName || 'Shree Jewels'}</h1>
-          <p style="color:#f0e8d8;margin:8px 0 0;font-size:14px;">Order Confirmation</p>
-        </div>
-        <div style="padding:24px;">
-          <p style="color:#3d1c1c;font-size:15px;">Dear <strong>${userName}</strong>,</p>
-          <p style="color:#5c2828;">Thank you for your order! We have received your order and it is being processed.</p>
-          <div style="background:#fdf9f0;border-radius:8px;padding:16px;margin:16px 0;">
-            <p style="margin:0;color:#3d1c1c;font-size:14px;"><strong>Order ID:</strong> ${order.orderId}</p>
-            <p style="margin:4px 0 0;color:#5c2828;font-size:13px;"><strong>Payment:</strong> ✅ Confirmed via Cashfree</p>
-          </div>
-          <table style="width:100%;border-collapse:collapse;margin:16px 0;">
-            <thead><tr style="background:#f5ede0;">
-              <th style="padding:10px 8px;text-align:left;color:#3d1c1c;font-size:13px;">Product</th>
-              <th style="padding:10px 8px;text-align:center;color:#3d1c1c;font-size:13px;">Qty</th>
-              <th style="padding:10px 8px;text-align:right;color:#3d1c1c;font-size:13px;">Amount</th>
-            </tr></thead>
-            <tbody>${itemRows}</tbody>
-          </table>
-          <div style="border-top:2px solid #f0e8d8;padding-top:12px;text-align:right;">
-            ${order.discount > 0 ? `<p style="color:#5c2828;font-size:13px;margin:4px 0;">Discount: -₹${order.discount.toLocaleString('en-IN')}</p>` : ''}
-            ${order.shippingCharge > 0 ? `<p style="color:#5c2828;font-size:13px;margin:4px 0;">Shipping: ₹${order.shippingCharge.toLocaleString('en-IN')}</p>` : '<p style="color:#22c55e;font-size:13px;margin:4px 0;">🚚 Free Shipping</p>'}
-            <p style="color:#3d1c1c;font-size:16px;font-weight:bold;margin:4px 0;">Total: ₹${order.totalAmount.toLocaleString('en-IN')}</p>
-          </div>
-        </div>
-        <div style="background:#f5ede0;padding:16px;text-align:center;">
-          <p style="color:#5c2828;font-size:12px;margin:0;">© ${new Date().getFullYear()} ${settings.siteName || 'Shree Jewels'}. All rights reserved.</p>
-        </div>
-      </div>
-    `;
+    let html = settings.orderEmailTemplate;
 
-    await transporter.sendMail({
-      from: settings.smtpFrom || settings.smtpUser,
+    if (!html) {
+      // Fallback default template
+      html = `
+        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;border:1px solid #f0e8d8;border-radius:8px;overflow:hidden;">
+          <div style="background:linear-gradient(135deg,#2e1111,#5c2828);padding:24px;text-align:center;">
+            <h1 style="color:#e8c97e;margin:0;font-size:22px;">{{siteName}}</h1>
+            <p style="color:#f0e8d8;margin:8px 0 0;font-size:14px;">Order Confirmation</p>
+          </div>
+          <div style="padding:24px;">
+            <p style="color:#3d1c1c;font-size:15px;">Dear <strong>{{userName}}</strong>,</p>
+            <p style="color:#5c2828;">Thank you for your order! We have received your order and it is being processed.</p>
+            <div style="background:#fdf9f0;border-radius:8px;padding:16px;margin:16px 0;">
+              <p style="margin:0;color:#3d1c1c;font-size:14px;"><strong>Order ID:</strong> {{orderId}}</p>
+              <p style="margin:4px 0 0;color:#5c2828;font-size:13px;"><strong>Payment:</strong> ✅ Confirmed via Cashfree</p>
+            </div>
+            <table style="width:100%;border-collapse:collapse;margin:16px 0;">
+              <thead><tr style="background:#f5ede0;">
+                <th style="padding:10px 8px;text-align:left;color:#3d1c1c;font-size:13px;">Product</th>
+                <th style="padding:10px 8px;text-align:center;color:#3d1c1c;font-size:13px;">Qty</th>
+                <th style="padding:10px 8px;text-align:right;color:#3d1c1c;font-size:13px;">Amount</th>
+              </tr></thead>
+              <tbody>{{itemRows}}</tbody>
+            </table>
+            <div style="border-top:2px solid #f0e8d8;padding-top:12px;text-align:right;">
+              {{discountLine}}
+              {{shippingLine}}
+              <p style="color:#3d1c1c;font-size:16px;font-weight:bold;margin:4px 0;">Total: ₹{{totalAmount}}</p>
+            </div>
+          </div>
+          <div style="background:#f5ede0;padding:16px;text-align:center;">
+            <p style="color:#5c2828;font-size:12px;margin:0;">© ${new Date().getFullYear()} {{siteName}}. All rights reserved.</p>
+          </div>
+        </div>
+      `;
+    }
+
+    // Replace variables
+    const discountLine = order.discount > 0 ? `<p style="color:#5c2828;font-size:13px;margin:4px 0;">Discount: -₹${order.discount.toLocaleString('en-IN')}</p>` : '';
+    const shippingLine = order.shippingCharge > 0 ? `<p style="color:#5c2828;font-size:13px;margin:4px 0;">Shipping: ₹${order.shippingCharge.toLocaleString('en-IN')}</p>` : '<p style="color:#22c55e;font-size:13px;margin:4px 0;">🚚 Free Shipping</p>';
+
+    html = html.replace(/{{siteName}}/g, settings.siteName || 'Shree Jewels')
+               .replace(/{{userName}}/g, userName || 'Customer')
+               .replace(/{{orderId}}/g, order.orderId)
+               .replace(/{{itemRows}}/g, itemRows)
+               .replace(/{{discountLine}}/g, discountLine)
+               .replace(/{{shippingLine}}/g, shippingLine)
+               .replace(/{{totalAmount}}/g, order.totalAmount.toLocaleString('en-IN'));
+
+    let subject = settings.orderEmailSubject || 'Your Order Confirmation - Shree Jewels';
+    subject = subject.replace(/{{orderId}}/g, order.orderId)
+                     .replace(/{{siteName}}/g, settings.siteName || 'Shree Jewels');
+
+    await resend.emails.send({
+      from: settings.smtpFrom,
       to: userEmail,
-      subject: `Order Confirmed – ${order.orderId} | ${settings.siteName || 'Shree Jewels'}`,
+      subject,
       html,
     });
   } catch (err) {

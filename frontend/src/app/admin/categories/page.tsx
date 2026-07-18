@@ -6,7 +6,7 @@ import { Plus, Pencil, Trash2, X, GripVertical, Upload, ChevronRight } from 'luc
 import { categoryAPI } from '@/lib/api';
 import toast from 'react-hot-toast';
 
-const EMPTY_FORM = { name: '', description: '', parentCategory: '', order: '0', isActive: true, metaTitle: '', metaDescription: '', metaKeywords: '' };
+const EMPTY_FORM = { name: '', slug: '', description: '', parentCategory: '', order: '0', isActive: true, metaTitle: '', metaDescription: '', metaKeywords: '' };
 
 export default function AdminCategoriesPage() {
   const [categories, setCategories] = useState<any[]>([]);
@@ -43,7 +43,7 @@ export default function AdminCategoriesPage() {
 
   const openEdit = (cat: any) => {
     setEditCat(cat);
-    setForm({ name: cat.name, description: cat.description || '', parentCategory: cat.parentCategory?._id || '', order: cat.order.toString(), isActive: cat.isActive, metaTitle: cat.metaTitle || '', metaDescription: cat.metaDescription || '', metaKeywords: cat.metaKeywords || '' });
+    setForm({ name: cat.name, slug: cat.slug || '', description: cat.description || '', parentCategory: cat.parentCategory?._id || '', order: cat.order.toString(), isActive: cat.isActive, metaTitle: cat.metaTitle || '', metaDescription: cat.metaDescription || '', metaKeywords: cat.metaKeywords || '' });
     setImageFile(null);
     setModalOpen(true);
   };
@@ -55,6 +55,7 @@ export default function AdminCategoriesPage() {
       const fd = new FormData();
       fd.append('name', form.name);
       fd.append('description', form.description);
+      if ((form as any).slug) fd.append('slug', (form as any).slug);
       fd.append('parentCategory', form.parentCategory);
       fd.append('order', form.order);
       fd.append('isActive', form.isActive.toString());
@@ -186,6 +187,12 @@ export default function AdminCategoriesPage() {
                 <div>
                   <label className="block text-xs text-charcoal-600 mb-1.5 uppercase tracking-wide">Name *</label>
                   <input type="text" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
+                    className="w-full bg-cream-50 border border-cream-200 text-charcoal-900 text-sm px-3 py-2.5 focus:outline-none focus:border-gold-400" />
+                </div>
+                <div>
+                  <label className="block text-xs text-charcoal-600 mb-1.5 uppercase tracking-wide">Custom URL Slug (Optional)</label>
+                  <input type="text" value={(form as any).slug || ''} onChange={e => setForm(p => ({ ...p, slug: e.target.value }))}
+                    placeholder="e.g. gold-rings"
                     className="w-full bg-cream-50 border border-cream-200 text-charcoal-900 text-sm px-3 py-2.5 focus:outline-none focus:border-gold-400" />
                 </div>
                 <div>

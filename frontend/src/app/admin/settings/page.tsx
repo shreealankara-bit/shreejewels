@@ -24,6 +24,9 @@ interface SiteSettings {
   smtpUser: string;
   smtpPass: string;
   smtpFrom: string;
+  resendApiKey: string;
+  orderEmailSubject: string;
+  orderEmailTemplate: string;
   aboutTitle: string;
   aboutContent: string;
   aboutImage: string;
@@ -181,6 +184,9 @@ export default function SettingsPage() {
     smtpUser: "",
     smtpPass: "",
     smtpFrom: "",
+    resendApiKey: "",
+    orderEmailSubject: "",
+    orderEmailTemplate: "",
     aboutTitle: "",
     aboutContent: "",
     aboutImage: "",
@@ -208,6 +214,9 @@ export default function SettingsPage() {
         smtpUser: s.smtpUser ?? "",
         smtpPass: s.smtpPass ?? "",
         smtpFrom: s.smtpFrom ?? "",
+        resendApiKey: s.resendApiKey ?? "",
+        orderEmailSubject: s.orderEmailSubject ?? "",
+        orderEmailTemplate: s.orderEmailTemplate ?? "",
         aboutTitle: s.aboutTitle ?? "",
         aboutContent: s.aboutContent ?? "",
         aboutImage: s.aboutImage ?? "",
@@ -306,7 +315,7 @@ export default function SettingsPage() {
     },
     {
       id: "email",
-      label: "Email (SMTP)",
+      label: "Email (Resend)",
       icon: <Mail className="h-3.5 w-3.5" />,
     },
     {
@@ -460,80 +469,29 @@ export default function SettingsPage() {
               </div>
             )}
 
-            {/* ── Email (SMTP) Tab ─────────────────────────────────────────── */}
+            {/* ── Email (Resend) Tab ─────────────────────────────────────────── */}
             {activeTab === "email" && (
               <div className={cardClass}>
                 {/* Info note */}
                 <div className="flex items-start gap-3 bg-cream-100 border border-cream-200 rounded px-4 py-3">
                   <Info className="h-4 w-4 text-gold-500 mt-0.5 flex-shrink-0" />
                   <p className="text-xs text-charcoal-600 leading-relaxed">
-                    SMTP credentials are stored securely and used to send order
-                    confirmation emails.
+                    Resend API credentials are used to send order confirmation emails. Get your API key at resend.com.
                   </p>
                 </div>
 
-                {/* SMTP Host */}
+                {/* Resend API Key */}
                 <div>
-                  <label className={labelClass} htmlFor="smtpHost">
-                    SMTP Host
+                  <label className={labelClass} htmlFor="resendApiKey">
+                    Resend API Key
                   </label>
                   <input
-                    id="smtpHost"
-                    name="smtpHost"
-                    type="text"
-                    value={form.smtpHost}
-                    onChange={handleChange}
-                    placeholder="smtp.example.com"
-                    className={inputClass}
-                  />
-                </div>
-
-                {/* SMTP Port */}
-                <div>
-                  <label className={labelClass} htmlFor="smtpPort">
-                    SMTP Port
-                  </label>
-                  <input
-                    id="smtpPort"
-                    name="smtpPort"
-                    type="number"
-                    value={form.smtpPort}
-                    onChange={handleChange}
-                    placeholder="587"
-                    className={inputClass}
-                  />
-                </div>
-
-                {/* SMTP Username */}
-                <div>
-                  <label className={labelClass} htmlFor="smtpUser">
-                    SMTP Username
-                  </label>
-                  <input
-                    id="smtpUser"
-                    name="smtpUser"
-                    type="text"
-                    value={form.smtpUser}
-                    onChange={handleChange}
-                    placeholder="user@example.com"
-                    autoComplete="username"
-                    className={inputClass}
-                  />
-                </div>
-
-                {/* SMTP Password */}
-                <div>
-                  <label className={labelClass} htmlFor="smtpPass">
-                    SMTP Password
-                  </label>
-                  <input
-                    id="smtpPass"
-                    name="smtpPass"
+                    id="resendApiKey"
+                    name="resendApiKey"
                     type="password"
-                    value={form.smtpPass}
+                    value={form.resendApiKey}
                     onChange={handleChange}
-                    placeholder="••••••••"
-                    autoComplete="current-password"
+                    placeholder="re_..."
                     className={inputClass}
                   />
                 </div>
@@ -552,6 +510,44 @@ export default function SettingsPage() {
                     placeholder="no-reply@shreejewels.com"
                     className={inputClass}
                   />
+                </div>
+
+                {/* Order Email Subject */}
+                <div>
+                  <label className={labelClass} htmlFor="orderEmailSubject">
+                    Order Confirmation Email Subject
+                  </label>
+                  <input
+                    id="orderEmailSubject"
+                    name="orderEmailSubject"
+                    type="text"
+                    value={form.orderEmailSubject}
+                    onChange={handleChange}
+                    placeholder="Your Order Confirmation - Shree Jewels"
+                    className={inputClass}
+                  />
+                  <p className="mt-1 text-xs text-charcoal-400">
+                    Variables available: {'{{orderId}}'}, {'{{siteName}}'}
+                  </p>
+                </div>
+
+                {/* Order Email Template */}
+                <div>
+                  <label className={labelClass} htmlFor="orderEmailTemplate">
+                    Order Email Template (HTML)
+                  </label>
+                  <textarea
+                    id="orderEmailTemplate"
+                    name="orderEmailTemplate"
+                    rows={12}
+                    value={form.orderEmailTemplate}
+                    onChange={handleChange}
+                    placeholder="Leave blank to use default template..."
+                    className={`${inputClass} font-mono text-xs`}
+                  />
+                  <p className="mt-1 text-xs text-charcoal-400">
+                    Variables available: {'{{siteName}}'}, {'{{userName}}'}, {'{{orderId}}'}, {'{{itemRows}}'}, {'{{discountLine}}'}, {'{{shippingLine}}'}, {'{{totalAmount}}'}
+                  </p>
                 </div>
 
                 {/* Save */}

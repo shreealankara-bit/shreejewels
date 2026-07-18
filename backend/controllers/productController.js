@@ -151,13 +151,13 @@ const getProductBySlug = asyncHandler(async (req, res) => {
 });
 
 const createProduct = asyncHandler(async (req, res) => {
-  const { title, description, price, discountPrice, category, subCategory, stock, tags, material, weight, sku, isFeatured, isBestseller, isNewArrival, metaTitle, metaDescription, metaKeywords } = req.body;
+  const { title, description, price, discountPrice, category, subCategory, stock, tags, material, weight, sku, isFeatured, isBestseller, isNewArrival, metaTitle, metaDescription, metaKeywords, slug: customSlug } = req.body;
   if (!title || !price || !category) {
     res.status(400);
     throw new Error('Title, price, and category are required');
   }
 
-  let slug = slugify(title);
+  let slug = customSlug ? slugify(customSlug) : slugify(title);
   const exists = await prisma.product.findUnique({ where: { slug } });
   if (exists) slug = `${slug}-${Date.now()}`;
 
@@ -221,7 +221,8 @@ const updateProduct = asyncHandler(async (req, res) => {
   }
 
   const data = {
-    ...(req.body.title !== undefined ? { title: req.body.title, slug: slugify(req.body.title) } : {}),
+    ...(req.body.title !== undefined ? { title: req.body.title } : {}),
+    ...(req.body.slug !== undefined ? { slug: slugify(req.body.slug) } : {}),
     ...(req.body.description !== undefined ? { description: req.body.description } : {}),
     ...(req.body.price !== undefined ? { price: Number(req.body.price) } : {}),
     ...(req.body.discountPrice !== undefined ? { discountPrice: Number(req.body.discountPrice) || 0 } : {}),

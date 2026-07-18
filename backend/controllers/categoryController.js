@@ -74,6 +74,7 @@ const createCategory = asyncHandler(async (req, res) => {
     metaTitle, metaDescription, metaKeywords,
     // Accept both field names for parent category
     parentCategory, parentCategoryId,
+    slug: customSlug,
   } = req.body;
 
   if (!name) { res.status(400); throw new Error('Name is required'); }
@@ -87,7 +88,7 @@ const createCategory = asyncHandler(async (req, res) => {
     if (!parent) { res.status(400); throw new Error('Parent category not found'); }
   }
 
-  let slug = slugify(name);
+  let slug = customSlug ? slugify(customSlug) : slugify(name);
   const exists = await prisma.category.findUnique({ where: { slug } });
   if (exists) slug = `${slug}-${Date.now()}`;
 
@@ -133,7 +134,8 @@ const updateCategory = asyncHandler(async (req, res) => {
   }
 
   const data = {
-    ...(req.body.name !== undefined ? { name: req.body.name, slug: slugify(req.body.name) } : {}),
+    ...(req.body.name !== undefined ? { name: req.body.name } : {}),
+    ...(req.body.slug !== undefined ? { slug: slugify(req.body.slug) } : {}),
     ...(req.body.description !== undefined ? { description: req.body.description } : {}),
     ...(resolvedParentId !== undefined ? { parentCategoryId: resolvedParentId } : {}),
     ...(req.body.order !== undefined ? { order: Number(req.body.order) } : {}),

@@ -22,7 +22,7 @@ interface Product {
 }
 
 const EMPTY_FORM = {
-  title: '', description: '', price: '', discountPrice: '', stock: '',
+  title: '', slug: '', description: '', price: '', discountPrice: '', stock: '',
   category: '', subCategory: '', tags: '', material: '', weight: '', sku: '',
   isFeatured: false, isBestseller: false, isNewArrival: false, isActive: true,
   metaTitle: '', metaDescription: '', metaKeywords: '',
@@ -93,6 +93,7 @@ export default function AdminProductsPage() {
     setEditProduct(product);
     setForm({
       title: product.title,
+      slug: (product as any).slug || '',
       description: (product as any).description || '',
       price: product.price.toString(),
       discountPrice: product.discountPrice.toString(),
@@ -346,6 +347,7 @@ export default function AdminProductsPage() {
                 <div className="space-y-4">
                   {[
                     { label: 'Title *', key: 'title', type: 'text' },
+                    { label: 'Custom URL Slug (Optional)', key: 'slug', type: 'text' },
                     { label: 'Price (₹) *', key: 'price', type: 'number' },
                     { label: 'Discount Price (₹)', key: 'discountPrice', type: 'number' },
                     { label: 'Stock *', key: 'stock', type: 'number' },
