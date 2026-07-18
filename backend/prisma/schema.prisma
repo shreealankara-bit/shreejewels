@@ -83,6 +83,7 @@ model Category {
   order            Int        @default(0)
   metaTitle        String     @default("")
   metaDescription  String     @default("")
+  metaKeywords     String     @default("")
   createdAt        DateTime   @default(now())
   updatedAt        DateTime   @updatedAt
 

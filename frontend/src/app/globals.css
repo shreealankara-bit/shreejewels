@@ -51,6 +51,21 @@
 *,*::before,*::after{box-sizing:border-box}
 html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased;-ms-overflow-style:none;scrollbar-width:none}
 body{font-family:var(--font-sans);color:var(--brand-maroon-800);background:var(--brand-ivory);line-height:1.6;margin:0}
+
+/* Global cursor rules — every interactive element must show pointer */
+button,
+a,
+[role="button"],
+select,
+label[for],
+label[class],
+input[type="checkbox"],
+input[type="radio"],
+input[type="submit"],
+input[type="button"],
+input[type="file"],
+.cursor-pointer{cursor:pointer}
+
 ::selection{background:rgba(201,168,76,.22)}
 html::-webkit-scrollbar,body::-webkit-scrollbar{display:none}
 ::-webkit-scrollbar{width:5px;height:5px}
@@ -174,7 +189,8 @@ html::-webkit-scrollbar,body::-webkit-scrollbar{display:none}
 @media(min-width:640px){.product-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}}
 @media(min-width:1024px){.product-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}}
 
-.product-card{background:#fff;border:1px solid #e9ddd0}
+.product-card{background:#fff;border:1px solid #e9ddd0;cursor:pointer}
+.product-card a,.product-card button{cursor:pointer}
 .product-card-img{position:relative;aspect-ratio:4/5;overflow:hidden;background:var(--brand-cream)}
 .product-card-info{padding:10px}
 .product-card-title{font-family:var(--font-display);font-size:.9rem;color:var(--brand-maroon-800);margin:0 0 6px;line-height:1.35;font-weight:600}
@@ -412,3 +428,17 @@ div[role="button"] {
   .admin-table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
   .admin-table-scroll table{min-width:600px}
 }
+
+/* Admin panel — ensure all interactive elements always show pointer */
+.admin-panel button,
+.admin-panel a,
+.admin-panel select,
+.admin-panel label,
+.admin-panel input[type="checkbox"],
+.admin-panel input[type="radio"],
+.admin-panel input[type="file"]{
+  cursor:pointer
+}
+/* Catch-all for Tailwind admin buttons that might not have cursor-pointer */
+[class*="admin"] button,[class*="admin"] a{cursor:pointer}
+div.flex button,nav a,aside a,header button{cursor:pointer}

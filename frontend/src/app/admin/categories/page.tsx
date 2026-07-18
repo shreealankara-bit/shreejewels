@@ -6,7 +6,7 @@ import { Plus, Pencil, Trash2, X, GripVertical, Upload, ChevronRight } from 'luc
 import { categoryAPI } from '@/lib/api';
 import toast from 'react-hot-toast';
 
-const EMPTY_FORM = { name: '', description: '', parentCategory: '', order: '0', isActive: true };
+const EMPTY_FORM = { name: '', description: '', parentCategory: '', order: '0', isActive: true, metaTitle: '', metaDescription: '', metaKeywords: '' };
 
 export default function AdminCategoriesPage() {
   const [categories, setCategories] = useState<any[]>([]);
@@ -43,7 +43,7 @@ export default function AdminCategoriesPage() {
 
   const openEdit = (cat: any) => {
     setEditCat(cat);
-    setForm({ name: cat.name, description: cat.description || '', parentCategory: cat.parentCategory?._id || '', order: cat.order.toString(), isActive: cat.isActive });
+    setForm({ name: cat.name, description: cat.description || '', parentCategory: cat.parentCategory?._id || '', order: cat.order.toString(), isActive: cat.isActive, metaTitle: cat.metaTitle || '', metaDescription: cat.metaDescription || '', metaKeywords: cat.metaKeywords || '' });
     setImageFile(null);
     setModalOpen(true);
   };
@@ -58,6 +58,9 @@ export default function AdminCategoriesPage() {
       fd.append('parentCategory', form.parentCategory);
       fd.append('order', form.order);
       fd.append('isActive', form.isActive.toString());
+      if ((form as any).metaTitle) fd.append('metaTitle', (form as any).metaTitle);
+      if ((form as any).metaDescription) fd.append('metaDescription', (form as any).metaDescription);
+      if (form.metaKeywords) fd.append('metaKeywords', form.metaKeywords);
       if (imageFile) fd.append('image', imageFile);
 
       if (editCat) {
@@ -199,6 +202,24 @@ export default function AdminCategoriesPage() {
                   <label className="block text-xs text-charcoal-600 mb-1.5 uppercase tracking-wide">Description</label>
                   <textarea value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} rows={2}
                     className="w-full bg-cream-50 border border-cream-200 text-charcoal-900 text-sm px-3 py-2.5 focus:outline-none focus:border-gold-400 resize-none" />
+                </div>
+                <div>
+                  <label className="block text-xs text-charcoal-600 mb-1.5 uppercase tracking-wide">SEO Title</label>
+                  <input type="text" value={(form as any).metaTitle || ''} onChange={e => setForm(p => ({ ...p, metaTitle: e.target.value }))}
+                    placeholder="SEO title for this category"
+                    className="w-full bg-cream-50 border border-cream-200 text-charcoal-900 text-sm px-3 py-2.5 focus:outline-none focus:border-gold-400" />
+                </div>
+                <div>
+                  <label className="block text-xs text-charcoal-600 mb-1.5 uppercase tracking-wide">SEO Description</label>
+                  <textarea value={(form as any).metaDescription || ''} onChange={e => setForm(p => ({ ...p, metaDescription: e.target.value }))} rows={2}
+                    placeholder="SEO description for this category"
+                    className="w-full bg-cream-50 border border-cream-200 text-charcoal-900 text-sm px-3 py-2.5 focus:outline-none focus:border-gold-400 resize-none" />
+                </div>
+                <div>
+                  <label className="block text-xs text-charcoal-600 mb-1.5 uppercase tracking-wide">SEO Keywords (Comma separated)</label>
+                  <input type="text" value={form.metaKeywords} onChange={e => setForm(p => ({ ...p, metaKeywords: e.target.value }))}
+                    placeholder="e.g. gold, ring, 24k"
+                    className="w-full bg-cream-50 border border-cream-200 text-charcoal-900 text-sm px-3 py-2.5 focus:outline-none focus:border-gold-400" />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>

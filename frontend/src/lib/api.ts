@@ -40,13 +40,18 @@ const originalDelete = api.delete;
   // Only cache on client side
   if (typeof window !== 'undefined') {
     const key = `${url}?${config?.params ? JSON.stringify(config.params) : ''}`;
-    const cached = cache.get(key);
-    const now = Date.now();
-    if (cached && now - cached.timestamp < CACHE_TTL) {
-      return Promise.resolve(cached.data);
+    // Bypass cache for admin routes
+    if (!url.includes('/admin')) {
+      const cached = cache.get(key);
+      const now = Date.now();
+      if (cached && now - cached.timestamp < CACHE_TTL) {
+        return Promise.resolve(cached.data);
+      }
     }
     return originalGet.call(this, url, config).then((res) => {
-      cache.set(key, { data: res, timestamp: Date.now() });
+      if (!url.includes('/admin')) {
+        cache.set(key, { data: res, timestamp: Date.now() });
+      }
       return res;
     });
   }
@@ -170,4 +175,8 @@ export const missingOrderAPI = {
 // ===================== ADMIN CUSTOMERS =====================
 export const adminCustomerAPI = {
   getAll: (params?: object) => api.get('/admin/users', { params }),
+  create: (data: object) => api.post('/admin/users', data),
+  update: (id: string, data: object) => api.put(`/admin/users/${id}`, data),
+  delete: (id: string) => api.delete(`/admin/users/${id}`),
+  toggleStatus: (id: string) => api.put(`/admin/users/${id}/toggle`),
 };

@@ -19,7 +19,7 @@ interface Filters {
   newArrival: string;
 }
 
-function ProductsContent() {
+function ProductsContent({ initialCategorySlug }: { initialCategorySlug?: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -31,7 +31,7 @@ function ProductsContent() {
   const [expandedSections, setExpandedSections] = useState({ price: true, category: true, tags: true });
 
   const [filters, setFilters] = useState<Filters>({
-    category: searchParams.get('category') || '',
+    category: initialCategorySlug || searchParams.get('category') || '',
     subCategory: searchParams.get('subCategory') || '',
     minPrice: searchParams.get('minPrice') || '',
     maxPrice: searchParams.get('maxPrice') || '',
@@ -375,6 +375,8 @@ function ProductsContent() {
     </div>
   );
 }
+
+export { ProductsContent };
 
 export default function ProductsPage() {
   return (

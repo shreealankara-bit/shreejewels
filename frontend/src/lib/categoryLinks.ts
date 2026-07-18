@@ -2,6 +2,7 @@ type CategoryLike = {
   _id?: string;
   id?: string;
   name?: string;
+  slug?: string;
   subcategories?: CategoryLike[];
 };
 
@@ -21,9 +22,25 @@ export const getCategoryId = (categories: CategoryLike[], names: string[]) => {
   return '';
 };
 
+export const getCategorySlug = (categories: CategoryLike[], names: string[]) => {
+  const wanted = names.map(normalise);
+  const stack = [...categories];
+
+  while (stack.length) {
+    const category = stack.shift();
+    if (!category) continue;
+    if (wanted.includes(normalise(category.name))) return category.slug || category._id || category.id || '';
+    if (category.subcategories?.length) stack.push(...category.subcategories);
+  }
+
+  return '';
+};
+
 export const categoryHref = (categories: CategoryLike[], names: string[], fallback = '/products') => {
-  const id = getCategoryId(categories, names);
-  return id ? `/products?category=${encodeURIComponent(id)}` : fallback;
+  const slugOrId = getCategorySlug(categories, names);
+  if (!slugOrId) return fallback;
+  // If it's a slug (doesn't start with c), use /collections
+  return slugOrId.startsWith('c') ? `/products?category=${encodeURIComponent(slugOrId)}` : `/collections/${encodeURIComponent(slugOrId)}`;
 };
 
 export const subCategoryHref = (parent: CategoryLike, sub: CategoryLike) => {

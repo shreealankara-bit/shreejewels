@@ -71,17 +71,21 @@ app.use((req, res, next) => {
 // Rate limiting
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 200,
+  max: 1000, // Raised from 500 — admin sessions make many requests
   message: { success: false, message: 'Too many requests, please try again later' },
+  standardHeaders: true,
+  legacyHeaders: false,
 });
-const authLimiter = rateLimit({
+// Strict limiter ONLY for actual login/register endpoints
+const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 20,
-  message: { success: false, message: 'Too many login attempts' },
+  message: { success: false, message: 'Too many login attempts, please try again later' },
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 
 app.use('/api', apiLimiter);
-app.use('/api/auth', authLimiter);
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -97,12 +101,20 @@ const cachePublic = (seconds) => (req, res, next) => {
 };
 
 // Routes
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/products', cachePublic(60), require('./routes/products'));     // 1 min cache
-app.use('/api/categories', cachePublic(300), require('./routes/categories')); // 5 min cache
+// IMPORTANT: loginLimiter must be mounted BEFORE authRouter so it runs first
+app.use('/api/auth/login', loginLimiter);
+app.use('/api/auth/login/customer', loginLimiter);
+app.use('/api/auth/register', loginLimiter);
+const authRouter = require('./routes/auth');
+app.use('/api/auth', authRouter);
+
+// No server-side cache headers — frontend 5s in-memory cache handles perf,
+// and cache.clear() on mutations ensures admin changes reflect immediately
+app.use('/api/products', require('./routes/products'));
+app.use('/api/categories', require('./routes/categories'));
 app.use('/api/orders', require('./routes/orders'));
 app.use('/api/coupons', require('./routes/coupons'));
-app.use('/api/banners', cachePublic(120), require('./routes/banners'));       // 2 min cache
+app.use('/api/banners', cachePublic(60), require('./routes/banners'));  // banners are rarely mutated
 app.use('/api/admin/users', require('./routes/users'));
 app.use('/api/settings', require('./routes/settings'));
 app.use('/api/testimonials', require('./routes/testimonials'));

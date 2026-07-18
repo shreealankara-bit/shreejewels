@@ -48,11 +48,15 @@ export default function AdminProductsPage() {
   const fetchProducts = useCallback(async () => {
     setLoading(true);
     try {
-      // Admin needs to see ALL products (active + hidden) — pass no active filter
+      // Admin needs to see ALL products (active + hidden) — pass 'all' by default
       const params: any = { page, limit: 20 };
       if (search) params.search = search;
       // filterActive: '' = all, 'true' = only active, 'false' = only hidden
-      if (filterActive !== '') params.active = filterActive;
+      if (filterActive !== '') {
+        params.active = filterActive;
+      } else {
+        params.active = 'all';
+      }
       const res = await productAPI.getAll(params);
       setProducts(res.data.products || []);
       setPagination(res.data.pagination || { page: 1, pages: 1, total: 0 });
@@ -89,16 +93,16 @@ export default function AdminProductsPage() {
     setEditProduct(product);
     setForm({
       title: product.title,
-      description: '',
+      description: (product as any).description || '',
       price: product.price.toString(),
       discountPrice: product.discountPrice.toString(),
       stock: product.stock.toString(),
       category: (product.category as any)?._id || '',
       subCategory: (product.subCategory as any)?._id || '',
-      tags: '',
-      material: '',
-      weight: '',
-      sku: '',
+      tags: Array.isArray((product as any).tags) ? (product as any).tags.join(', ') : ((product as any).tags || ''),
+      material: (product as any).material || '',
+      weight: (product as any).weight || '',
+      sku: (product as any).sku || '',
       isFeatured: product.isFeatured,
       isBestseller: product.isBestseller,
       isNewArrival: product.isNewArrival,

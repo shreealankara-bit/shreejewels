@@ -29,11 +29,24 @@ const getProducts = asyncHandler(async (req, res) => {
     featured, bestseller, newArrival, active = 'true',
   } = req.query;
 
+  let categoryIdToSearch = category;
+  let subCategoryIdToSearch = subCategory;
+
+  // Resolve category slug to ID if provided
+  if (category && !category.startsWith('c')) {
+    const catDoc = await prisma.category.findUnique({ where: { slug: category } });
+    if (catDoc) categoryIdToSearch = catDoc.id;
+  }
+  if (subCategory && !subCategory.startsWith('c')) {
+    const subCatDoc = await prisma.category.findUnique({ where: { slug: subCategory } });
+    if (subCatDoc) subCategoryIdToSearch = subCatDoc.id;
+  }
+
   const where = {
     // 'all' = no filter, 'true' = active only, 'false' = inactive only
     ...(active === 'all' ? {} : active === 'false' ? { isActive: false } : { isActive: true }),
-    ...(category ? { categoryId: category } : {}),
-    ...(subCategory ? { subCategoryId: subCategory } : {}),
+    ...(categoryIdToSearch ? { categoryId: categoryIdToSearch } : {}),
+    ...(subCategoryIdToSearch ? { subCategoryId: subCategoryIdToSearch } : {}),
     ...(featured === 'true' ? { isFeatured: true } : {}),
     ...(bestseller === 'true' ? { isBestseller: true } : {}),
     ...(newArrival === 'true' ? { isNewArrival: true } : {}),

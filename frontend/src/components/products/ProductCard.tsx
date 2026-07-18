@@ -93,7 +93,7 @@ export default function ProductCard({ product, index = 0, priority = false }: Pr
 
   return (
     <div
-      className="product-card group"
+      className="product-card group hover:border-gold-300 transition-colors duration-200"
       onMouseEnter={handlePrefetch}
       style={shouldAnimate ? {
         animation: `fadeIn 0.4s ease ${index * 0.06}s both`,
@@ -127,9 +127,9 @@ export default function ProductCard({ product, index = 0, priority = false }: Pr
           )}
 
           {/* Badges */}
-          <div className="absolute top-2 left-2 flex flex-col gap-1">
+          <div className="absolute top-2 left-2 flex flex-row flex-wrap gap-1 z-10">
             {product.discountPercent > 0 && <span className="badge-sale">{product.discountPercent}% OFF</span>}
-            {product.isNewArrival && !product.discountPercent && <span className="badge-new">New</span>}
+            {product.isNewArrival && <span className="badge-new">New</span>}
             {product.isBestseller && <span className="badge-gold">Best Seller</span>}
             {product.stock === 0 && <span className="inline-block bg-maroon-800 text-white text-xs font-medium px-2 py-0.5 uppercase">Sold Out</span>}
           </div>
@@ -139,20 +139,17 @@ export default function ProductCard({ product, index = 0, priority = false }: Pr
             onClick={handleWishlist}
             id={`wishlist-${product._id}`}
             aria-label="Add to wishlist"
-            className={`absolute top-2 right-2 w-8 h-8 flex items-center justify-center bg-white shadow-md transition-colors ${inWishlist ? 'text-yellow-600' : 'text-maroon-600'} hover:bg-cream-100`}
+            className={`absolute top-2 right-2 w-8 h-8 flex items-center justify-center bg-white shadow-md rounded-full z-20 cursor-pointer transition-all hover:scale-110 active:scale-95 ${inWishlist ? 'text-yellow-600' : 'text-maroon-600'} hover:bg-cream-100`}
           >
             <Heart size={15} fill={inWishlist ? 'currentColor' : 'none'} />
           </button>
 
           {/* Quick add to cart */}
-          <div className="absolute bottom-0 left-0 right-0 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+          <div className="absolute bottom-0 left-0 right-0 translate-y-full group-hover:translate-y-0 transition-transform duration-300 z-20">
             <button
               onClick={handleAddToCart}
               id={`add-to-cart-${product._id}`}
-              className="w-full bg-maroon-900 hover:bg-gold-500 text-white text-xs font-medium py-2.5 flex items-center justify-center gap-2 transition-colors duration-200"
-              style={{ background: 'var(--brand-maroon-900)' }}
-              onMouseEnter={e => (e.currentTarget.style.background = 'var(--brand-gold)')}
-              onMouseLeave={e => (e.currentTarget.style.background = 'var(--brand-maroon-900)')}
+              className="w-full bg-maroon-900 hover:bg-gold-500 active:bg-gold-600 active:scale-[0.98] text-white text-xs font-medium py-3 flex items-center justify-center gap-2 transition-all duration-200 cursor-pointer select-none"
             >
               <ShoppingBag size={13} />
               {product.stock === 0 ? 'Out of Stock' : 'Quick Add'}

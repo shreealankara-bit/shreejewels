@@ -112,7 +112,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 onMouseEnter={() => handlePrefetch(href)}
                 onTouchStart={() => handlePrefetch(href)}
                 className={`
-                  flex items-center gap-3 px-4 py-3 mx-2 rounded-md text-sm transition-all group mb-0.5
+                  flex items-center gap-3 px-4 py-3 mx-2 rounded-md text-sm transition-all group mb-0.5 cursor-pointer
                   ${active
                     ? 'bg-gold-500/10 text-gold-600 font-semibold'
                     : 'text-charcoal-600 hover:text-charcoal-900 hover:bg-charcoal-50'
@@ -139,11 +139,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
           </div>
           <div className="flex gap-2">
-            <Link href="/" target="_blank" className="flex items-center gap-1.5 text-xs text-charcoal-500 hover:text-gold-500 transition-colors">
+            <Link href="/" target="_blank" className="flex items-center gap-1.5 text-xs text-charcoal-500 hover:text-gold-500 transition-colors cursor-pointer">
               <ExternalLink size={12} /> View Site
             </Link>
             <span className="text-charcoal-300">|</span>
-            <button onClick={logout} className="flex items-center gap-1.5 text-xs text-charcoal-500 hover:text-red-500 transition-colors">
+            <button onClick={logout} className="flex items-center gap-1.5 text-xs text-charcoal-500 hover:text-red-500 transition-colors cursor-pointer">
               <LogOut size={12} /> Sign Out
             </button>
           </div>
@@ -153,7 +153,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* ── MOBILE OVERLAY ── */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden backdrop-blur-sm"
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden backdrop-blur-sm cursor-pointer"
           onClick={() => setSidebarOpen(false)}
         />
       )}
@@ -166,7 +166,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           {/* Hamburger (mobile) */}
           <button
             onClick={() => setSidebarOpen(true)}
-            className="lg:hidden text-charcoal-700 hover:text-charcoal-900 p-1 -ml-1"
+            className="lg:hidden text-charcoal-700 hover:text-charcoal-900 p-1 -ml-1 cursor-pointer"
             aria-label="Open sidebar"
           >
             <Menu size={22} />
@@ -189,7 +189,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <Link
               href="/"
               target="_blank"
-              className="hidden sm:flex items-center gap-1.5 text-xs text-gold-500 hover:text-gold-600 border border-gold-200 hover:border-gold-400 px-3 py-1.5 transition-all"
+              className="hidden sm:flex items-center gap-1.5 text-xs text-gold-500 hover:text-gold-600 border border-gold-200 hover:border-gold-400 px-3 py-1.5 transition-all cursor-pointer"
             >
               <ExternalLink size={12} /> View Site
             </Link>
@@ -216,7 +216,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 onMouseEnter={() => handlePrefetch(href)}
                 onTouchStart={() => handlePrefetch(href)}
                 className={`
-                  flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5 px-1 text-center transition-colors min-w-0
+                  flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5 px-1 text-center transition-colors min-w-0 cursor-pointer
                   ${active ? 'text-gold-500' : 'text-charcoal-400 hover:text-charcoal-700'}
                 `}
               >
@@ -233,7 +233,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           {/* "More" button to open sidebar with remaining items */}
           <button
             onClick={() => setSidebarOpen(true)}
-            className="flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5 px-1 text-charcoal-400 hover:text-charcoal-700 transition-colors"
+            className="flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5 px-1 text-charcoal-400 hover:text-charcoal-700 transition-colors cursor-pointer"
           >
             <div className="p-1 rounded-lg">
               <Menu size={20} />

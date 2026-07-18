@@ -37,7 +37,7 @@ export default function CategoryCircles() {
 
   const items = [
     { label: 'Shop All', href: '/products', img: IMG.default },
-    ...cats.map(c => ({ label: c.name, href: `/products?category=${c._id}`, img: getImg(c.name, c.image) })),
+    ...cats.map(c => ({ label: c.name, href: c.slug ? `/collections/${c.slug}` : `/products?category=${c._id}`, img: getImg(c.name, c.image) })),
   ].slice(0, 9);
 
   return (

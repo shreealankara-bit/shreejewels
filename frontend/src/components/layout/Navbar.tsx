@@ -129,7 +129,7 @@ export default function Navbar() {
                     <div className="mega-grid">
                       {categories.map(cat => (
                         <div key={cat._id} className="mega-col">
-                          <Link href={`/products?category=${cat._id}`} className="mega-heading">
+                          <Link href={cat.slug ? `/collections/${cat.slug}` : `/products?category=${cat._id}`} className="mega-heading">
                             {cat.name}
                           </Link>
                           {cat.subcategories?.slice(0, 6).map(sub => (
@@ -282,7 +282,7 @@ export default function Navbar() {
                 <div className="mobile-nav-divider" />
                 {categories.map(cat => (
                   <div key={cat._id}>
-                    <Link href={`/products?category=${cat._id}`} onClick={() => setMobileOpen(false)} className="mobile-nav-link mobile-nav-cat">{cat.name}</Link>
+                    <Link href={cat.slug ? `/collections/${cat.slug}` : `/products?category=${cat._id}`} onClick={() => setMobileOpen(false)} className="mobile-nav-link mobile-nav-cat">{cat.name}</Link>
                     {cat.subcategories?.map(sub => (
                       <Link key={sub._id} href={subCategoryHref(cat, sub)} onClick={() => setMobileOpen(false)} className="mobile-nav-sub">— {sub.name}</Link>
                     ))}
