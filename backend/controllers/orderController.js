@@ -42,10 +42,16 @@ const buildOrderDisplayId = async () => {
 const sendOrderConfirmationEmail = async (order, userEmail, userName) => {
   try {
     const settings = await prisma.siteSettings.findFirst();
-    if (!settings?.resendApiKey || !settings?.smtpFrom) return;
+    const resendApiKey = settings?.resendApiKey || process.env.RESEND_API_KEY;
+    const smtpFrom = settings?.smtpFrom || process.env.RESEND_FROM_EMAIL || 'no-reply@shreejewels.com';
+
+    if (!resendApiKey) {
+      console.error('No Resend API key configured in Settings or .env');
+      return;
+    }
 
     const { Resend } = require('resend');
-    const resend = new Resend(settings.resendApiKey);
+    const resend = new Resend(resendApiKey);
 
     const items = Array.isArray(order.items) ? order.items : [];
     const itemRows = items
@@ -113,7 +119,7 @@ const sendOrderConfirmationEmail = async (order, userEmail, userName) => {
                      .replace(/{{siteName}}/g, settings.siteName || 'Shree Jewels');
 
     await resend.emails.send({
-      from: settings.smtpFrom,
+      from: smtpFrom,
       to: userEmail,
       subject,
       html,
