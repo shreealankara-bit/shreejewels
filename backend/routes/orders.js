@@ -1,7 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const { createPayment, verifyPayment, getMyOrders, getOrder, getAllOrders, updateOrderStatus, getOrderStats } = require('../controllers/orderController');
+const { createPayment, verifyPayment, getMyOrders, getOrder, getAllOrders, updateOrderStatus, getOrderStats, cashfreeWebhook } = require('../controllers/orderController');
 const { protect, adminOnly } = require('../middleware/auth');
+
+// Webhook (Unauthenticated)
+router.post('/webhook', cashfreeWebhook);
 
 // Customer
 router.post('/create-payment', protect, createPayment);

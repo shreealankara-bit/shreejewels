@@ -3,6 +3,7 @@ const axios = require('axios');
 const nodemailer = require('nodemailer');
 const prisma = require('../config/prisma');
 const { calculateCouponDiscount } = require('../utils/couponRules');
+const crypto = require('crypto');
 
 // ── Cashfree REST API client ───────────────────────────────────────────────────
 const CF_BASE =
@@ -227,6 +228,55 @@ const createPayment = asyncHandler(async (req, res) => {
   });
 });
 
+// ── Process Successful Order Helper ────────────────────────────────────────────
+const processSuccessfulOrder = async (orderId, cfPaymentId, userId) => {
+  return await prisma.$transaction(async (tx) => {
+    // 1. Fetch current order state
+    const order = await tx.order.findUnique({ where: { id: orderId } });
+    if (!order) throw new Error('Order not found in transaction');
+    if (order.paymentStatus === 'paid') return order; // Already processed
+
+    // 2. Decrement stock atomically and strictly
+    const orderItems = Array.isArray(order.items) ? order.items : [];
+    for (const item of orderItems) {
+      const product = await tx.product.findUnique({ where: { id: item.product } });
+      if (!product) throw new Error(`Product not found: ${item.title}`);
+      if (product.stock < item.quantity) {
+        throw new Error(`Insufficient stock for ${product.title}. Available: ${product.stock}, Requested: ${item.quantity}`);
+      }
+      await tx.product.update({
+        where: { id: item.product },
+        data: { stock: { decrement: item.quantity }, soldCount: { increment: item.quantity } },
+      });
+    }
+
+    // 3. Mark order as paid
+    const updatedOrder = await tx.order.update({
+      where: { id: orderId },
+      data: {
+        paymentStatus: 'paid',
+        orderStatus: 'confirmed',
+        cfPaymentId: String(cfPaymentId),
+      },
+    });
+
+    // 4. Update coupon usage
+    if (order.couponCode) {
+      const coupon = await tx.coupon.findUnique({ where: { code: order.couponCode } });
+      if (coupon) {
+        const usedBy = Array.isArray(coupon.usedBy) ? [...coupon.usedBy] : [];
+        if (!usedBy.includes(userId)) usedBy.push(userId);
+        await tx.coupon.update({
+          where: { code: order.couponCode },
+          data: { usedCount: { increment: 1 }, usedBy },
+        });
+      }
+    }
+
+    return updatedOrder;
+  });
+};
+
 // ── POST /orders/verify-payment ────────────────────────────────────────────────
 const verifyPayment = asyncHandler(async (req, res) => {
   const { orderId, cashfreeOrderId } = req.body;
@@ -236,7 +286,9 @@ const verifyPayment = asyncHandler(async (req, res) => {
   if (!order) { res.status(404); throw new Error('Order not found'); }
   if (order.userId !== req.user.id) { res.status(403); throw new Error('Access denied'); }
   if (order.cfOrderId !== cashfreeOrderId) { res.status(400); throw new Error('Order ID mismatch'); }
-  if (order.paymentStatus === 'paid') { res.status(400); throw new Error('Order already paid'); }
+  if (order.paymentStatus === 'paid') { 
+    return res.json({ success: true, order: { ...order, _id: order.id } });
+  }
 
   // Fetch payments from Cashfree
   const payments = await cfGetPayments(cashfreeOrderId);
@@ -248,38 +300,12 @@ const verifyPayment = asyncHandler(async (req, res) => {
   const successPayment = payments.find((p) => p.payment_status === 'SUCCESS');
   if (!successPayment) { res.status(400); throw new Error('Payment not successful'); }
 
-  // Update DB
-  const updatedOrder = await prisma.order.update({
-    where: { id: orderId },
-    data: {
-      paymentStatus: 'paid',
-      orderStatus: 'confirmed',
-      cfPaymentId: String(successPayment.cf_payment_id),
-    },
-  });
-
-  // Decrement stock atomically
-  const orderItems = Array.isArray(order.items) ? order.items : [];
-  await prisma.$transaction(
-    orderItems.map((item) =>
-      prisma.product.update({
-        where: { id: item.product },
-        data: { stock: { decrement: item.quantity }, soldCount: { increment: item.quantity } },
-      })
-    )
-  );
-
-  // Update coupon usage
-  if (order.couponCode) {
-    const coupon = await prisma.coupon.findUnique({ where: { code: order.couponCode } });
-    if (coupon) {
-      const usedBy = Array.isArray(coupon.usedBy) ? [...coupon.usedBy] : [];
-      if (!usedBy.includes(req.user.id)) usedBy.push(req.user.id);
-      await prisma.coupon.update({
-        where: { code: order.couponCode },
-        data: { usedCount: { increment: 1 }, usedBy },
-      });
-    }
+  let updatedOrder;
+  try {
+    updatedOrder = await processSuccessfulOrder(orderId, successPayment.cf_payment_id, req.user.id);
+  } catch (error) {
+    res.status(400);
+    throw new Error(error.message || 'Error processing order');
   }
 
   // Send confirmation email (non-blocking)
@@ -290,6 +316,65 @@ const verifyPayment = asyncHandler(async (req, res) => {
   if (userRecord) sendOrderConfirmationEmail(updatedOrder, userRecord.email, userRecord.name);
 
   res.json({ success: true, order: { ...updatedOrder, _id: updatedOrder.id } });
+});
+
+// ── POST /orders/webhook (Cashfree Webhook) ──────────────────────────────────
+const cashfreeWebhook = asyncHandler(async (req, res) => {
+  try {
+    const signature = req.headers['x-webhook-signature'];
+    const timestamp = req.headers['x-webhook-timestamp'];
+    
+    if (!signature || !timestamp || !req.rawBody) {
+      return res.status(400).send('Missing signature, timestamp, or raw body');
+    }
+
+    // Verify signature
+    const payload = timestamp + req.rawBody.toString();
+    const expectedSignature = crypto
+      .createHmac('sha256', process.env.CASHFREE_SECRET_KEY)
+      .update(payload)
+      .digest('base64');
+
+    if (expectedSignature !== signature) {
+      return res.status(401).send('Invalid webhook signature');
+    }
+
+    const event = req.body;
+    
+    // Only process PAYMENT_SUCCESS_WEBHOOK
+    if (event.type === 'PAYMENT_SUCCESS_WEBHOOK') {
+      const cfOrderId = event.data?.order?.order_id;
+      const cfPaymentId = event.data?.payment?.cf_payment_id;
+
+      if (cfOrderId && cfPaymentId) {
+        const order = await prisma.order.findFirst({ where: { cfOrderId } });
+        if (order && order.paymentStatus === 'pending') {
+          // Double check with API to prevent any payload spoofing
+          const payments = await cfGetPayments(cfOrderId);
+          const successPayment = payments?.find((p) => String(p.cf_payment_id) === String(cfPaymentId) && p.payment_status === 'SUCCESS');
+          
+          if (successPayment) {
+            try {
+              const updatedOrder = await processSuccessfulOrder(order.id, successPayment.cf_payment_id, order.userId);
+              // Send confirmation email
+              const userRecord = await prisma.user.findUnique({
+                where: { id: order.userId },
+                select: { email: true, name: true },
+              });
+              if (userRecord) sendOrderConfirmationEmail(updatedOrder, userRecord.email, userRecord.name);
+            } catch (err) {
+              console.error(`Webhook order processing failed for ${cfOrderId}:`, err.message);
+            }
+          }
+        }
+      }
+    }
+
+    res.status(200).send('Webhook received');
+  } catch (error) {
+    console.error('Webhook error:', error);
+    res.status(500).send('Webhook processing failed');
+  }
 });
 
 // ── GET /orders/my ─────────────────────────────────────────────────────────────
@@ -388,4 +473,4 @@ const getOrderStats = asyncHandler(async (req, res) => {
   });
 });
 
-module.exports = { createPayment, verifyPayment, getMyOrders, getOrder, getAllOrders, updateOrderStatus, getOrderStats };
+module.exports = { createPayment, verifyPayment, getMyOrders, getOrder, getAllOrders, updateOrderStatus, getOrderStats, cashfreeWebhook };
