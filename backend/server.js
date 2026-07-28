@@ -75,6 +75,7 @@ const apiLimiter = rateLimit({
   message: { success: false, message: 'Too many requests, please try again later' },
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { xForwardedForHeader: false },
 });
 // Strict limiter ONLY for actual login/register endpoints
 const loginLimiter = rateLimit({
@@ -83,6 +84,7 @@ const loginLimiter = rateLimit({
   message: { success: false, message: 'Too many login attempts, please try again later' },
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { xForwardedForHeader: false },
 });
 
 app.use('/api', apiLimiter);

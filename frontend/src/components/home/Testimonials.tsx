@@ -1,65 +1,49 @@
 'use client';
 
-const TESTIMONIALS = [
+import { useEffect, useState } from 'react';
+
+interface Testimonial {
+  _id: string;
+  name: string;
+  location?: string;
+  rating: number;
+  comment: string;
+  avatar?: string;
+}
+
+// Fallback data used only if API returns nothing
+const FALLBACK_TESTIMONIALS: Testimonial[] = [
   {
+    _id: 'fb1',
     name: 'Priya Sharma',
     location: 'Mumbai',
     rating: 5,
-    text: "Absolutely stunning pieces! The Rajwadi Kundan set I ordered looked even more beautiful in person. Perfect for my sister's wedding. The packaging was gorgeous too!",
-    product: 'Rajwadi Kundan Set',
-    avatar: 'PS',
+    comment: "Absolutely stunning pieces! The Rajwadi Kundan set I ordered looked even more beautiful in person. Perfect for my sister's wedding.",
   },
   {
+    _id: 'fb2',
     name: 'Ananya Reddy',
     location: 'Hyderabad',
     rating: 5,
-    text: "I've been buying jewellery online for years and ShreeJewels is by far the best. The anti-tarnish earrings are still shining like new after 6 months of daily wear!",
-    product: 'Anti Tarnish Mini Hoops',
-    avatar: 'AR',
+    comment: "I've been buying jewellery online for years and ShreeJewels is by far the best. The anti-tarnish earrings are still shining like new after 6 months!",
   },
   {
+    _id: 'fb3',
     name: 'Kavita Menon',
     location: 'Bangalore',
     rating: 5,
-    text: 'Fast delivery, quality packaging, and the jewellery is exactly as shown. The Moissanite necklace got so many compliments at my office party. Will definitely order again!',
-    product: 'Moissanite Layer Necklace',
-    avatar: 'KM',
-  },
-  {
-    name: 'Deepika Joshi',
-    location: 'Delhi',
-    rating: 5,
-    text: 'ShreeJewels never disappoints! The chandbali earrings are lightweight yet look so heavy and grand. Great for long functions. Customer support was very helpful too.',
-    product: 'Chandbali Drop Pair',
-    avatar: 'DJ',
-  },
-  {
-    name: 'Shruti Nair',
-    location: 'Chennai',
-    rating: 5,
-    text: "The Korean pearl hoops are my everyday staple now. So elegant and comfortable. I've gifted them to 3 of my friends already. Best quality at this price point!",
-    product: 'Korean Pearl Hoop',
-    avatar: 'SN',
-  },
-  {
-    name: 'Meera Iyer',
-    location: 'Kochi',
-    rating: 5,
-    text: 'Loved the Victorian stone necklace. Wore it to a reception and everyone kept asking where I got it. The clasp is sturdy and the stones are set perfectly. 10/10!',
-    product: 'Victorian Stone Necklace',
-    avatar: 'MI',
-  },
-  {
-    name: 'Pooja Singh',
-    location: 'Jaipur',
-    rating: 5,
-    text: 'The crystal stack rings are so trendy and beautifully made. They look expensive but are very affordable. ShreeJewels is my go-to for all occasions now.',
-    product: 'Crystal Stack Ring',
-    avatar: 'PJ',
+    comment: 'Fast delivery, quality packaging, and the jewellery is exactly as shown. Will definitely order again!',
   },
 ];
 
-function TestimonialCard({ item }: { item: (typeof TESTIMONIALS)[0] }) {
+function TestimonialCard({ item }: { item: Testimonial }) {
+  const initials = item.name
+    .split(' ')
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+
   return (
     <div style={{
       background: '#fff',
@@ -75,7 +59,7 @@ function TestimonialCard({ item }: { item: (typeof TESTIMONIALS)[0] }) {
     }}>
       {/* Stars */}
       <div style={{ display: 'flex', gap: '2px', color: '#d4af37', fontSize: '0.9rem' }}>
-        {'★★★★★'}
+        {'★'.repeat(item.rating)}{'☆'.repeat(5 - item.rating)}
       </div>
       {/* Text */}
       <p style={{
@@ -87,7 +71,7 @@ function TestimonialCard({ item }: { item: (typeof TESTIMONIALS)[0] }) {
         flex: 1,
         margin: 0,
       }}>
-        "{item.text}"
+        &ldquo;{item.comment}&rdquo;
       </p>
       {/* Footer */}
       <div style={{
@@ -98,29 +82,45 @@ function TestimonialCard({ item }: { item: (typeof TESTIMONIALS)[0] }) {
         paddingTop: '12px',
         marginTop: 'auto',
       }}>
-        <div style={{
-          width: '36px',
-          height: '36px',
-          borderRadius: '50%',
-          background: '#0f241b',
-          color: '#fff',
-          fontSize: '0.68rem',
-          fontWeight: 700,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexShrink: 0,
-          letterSpacing: '0.04em',
-        }}>
-          {item.avatar}
-        </div>
+        {item.avatar ? (
+          <img
+            src={item.avatar}
+            alt={item.name}
+            style={{
+              width: '36px',
+              height: '36px',
+              borderRadius: '50%',
+              objectFit: 'cover',
+              flexShrink: 0,
+            }}
+          />
+        ) : (
+          <div style={{
+            width: '36px',
+            height: '36px',
+            borderRadius: '50%',
+            background: '#0f241b',
+            color: '#fff',
+            fontSize: '0.68rem',
+            fontWeight: 700,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+            letterSpacing: '0.04em',
+          }}>
+            {initials}
+          </div>
+        )}
         <div>
           <p style={{ fontSize: '0.78rem', fontWeight: 700, color: '#0f241b', margin: 0, lineHeight: 1.2 }}>
             {item.name}
           </p>
-          <p style={{ fontSize: '0.66rem', color: '#8a9a92', margin: '2px 0 0' }}>
-            {item.location} · {item.product}
-          </p>
+          {item.location && (
+            <p style={{ fontSize: '0.66rem', color: '#8a9a92', margin: '2px 0 0' }}>
+              {item.location}
+            </p>
+          )}
         </div>
       </div>
     </div>
@@ -128,7 +128,24 @@ function TestimonialCard({ item }: { item: (typeof TESTIMONIALS)[0] }) {
 }
 
 export default function Testimonials() {
-  const row1 = [...TESTIMONIALS, ...TESTIMONIALS];
+  const [testimonials, setTestimonials] = useState<Testimonial[]>(FALLBACK_TESTIMONIALS);
+
+  useEffect(() => {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || '/api';
+    fetch(`${apiUrl}/testimonials`, { credentials: 'include' })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.testimonials?.length > 0) {
+          setTestimonials(data.testimonials);
+        }
+        // If API returns empty, keep fallback
+      })
+      .catch(() => {
+        // Keep fallback on error
+      });
+  }, []);
+
+  const row1 = [...testimonials, ...testimonials];
 
   return (
     <>
@@ -200,7 +217,7 @@ export default function Testimonials() {
               }}
             />
             <div className="t-track-left" style={{ display: 'flex', gap: '16px', width: 'max-content' }}>
-              {row1.map((item, i) => <TestimonialCard key={i} item={item} />)}
+              {row1.map((item, i) => <TestimonialCard key={`${item._id}-${i}`} item={item} />)}
             </div>
           </div>
 

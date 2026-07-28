@@ -75,29 +75,32 @@ const startGoogleOAuth = asyncHandler(async (req, res) => {
 const googleOAuthCallback = asyncHandler(async (req, res) => {
   const { code } = req.query;
   if (!code) {
-    res.status(400);
-    throw new Error('Google authorization code is required');
+    return res.redirect(`${getFrontendUrl()}/auth/login?error=google_no_code`);
   }
 
-  const { tokens } = await googleOAuthClient.getToken({
-    code,
-    redirect_uri: getGoogleCallbackUrl(),
-  });
+  try {
+    const { tokens } = await googleOAuthClient.getToken({
+      code,
+      redirect_uri: getGoogleCallbackUrl(),
+    });
 
-  if (!tokens.id_token) {
-    res.status(400);
-    throw new Error('Google ID token was not returned');
+    if (!tokens.id_token) {
+      return res.redirect(`${getFrontendUrl()}/auth/login?error=google_no_token`);
+    }
+
+    const ticket = await googleOAuthClient.verifyIdToken({
+      idToken: tokens.id_token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const { sub: googleId, email, name, picture } = ticket.getPayload();
+    const user = await findOrCreateGoogleUser({ googleId, email, name, picture });
+    setAuthCookie(user, res);
+    res.redirect(`${getFrontendUrl()}/?login=google`);
+  } catch (err) {
+    console.error('Google OAuth callback error:', err.message);
+    res.redirect(`${getFrontendUrl()}/auth/login?error=google_failed`);
   }
-
-  const ticket = await googleOAuthClient.verifyIdToken({
-    idToken: tokens.id_token,
-    audience: process.env.GOOGLE_CLIENT_ID,
-  });
-
-  const { sub: googleId, email, name, picture } = ticket.getPayload();
-  const user = await findOrCreateGoogleUser({ googleId, email, name, picture });
-  setAuthCookie(user, res);
-  res.redirect(`${getFrontendUrl()}/?login=google`);
 });
 
 const googleLogin = asyncHandler(async (req, res) => {

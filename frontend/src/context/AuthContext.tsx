@@ -42,6 +42,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try { await authAPI.logout(); } catch { /* ignore */ }
+    // Clear any client-side cookie in case the API call failed
+    document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/;';
+    document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=.shreealankara.com;';
     setUser(null);
     window.location.href = '/';
   };

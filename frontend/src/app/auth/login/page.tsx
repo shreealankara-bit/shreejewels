@@ -23,6 +23,14 @@ function LoginContent() {
     if (!authLoading && isLoggedIn) router.replace(redirect);
   }, [authLoading, isLoggedIn, redirect, router]);
 
+  // Show Google OAuth error if redirected back with error param
+  useEffect(() => {
+    const error = searchParams.get('error');
+    if (error?.startsWith('google')) {
+      toast.error('Google sign-in failed. Please try again or use email login.');
+    }
+  }, [searchParams]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
