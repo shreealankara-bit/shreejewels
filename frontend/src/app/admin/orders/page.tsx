@@ -7,13 +7,13 @@ import toast from 'react-hot-toast';
 
 const STATUS_OPTIONS = ['placed', 'confirmed', 'processing', 'shipped', 'out_for_delivery', 'delivered', 'cancelled'];
 const STATUS_COLORS: Record<string, string> = {
-  placed: 'text-yellow-400 bg-yellow-900/30',
-  confirmed: 'text-blue-400 bg-blue-900/30',
-  processing: 'text-purple-400 bg-purple-900/30',
-  shipped: 'text-cyan-400 bg-cyan-900/30',
-  out_for_delivery: 'text-orange-400 bg-orange-900/30',
-  delivered: 'text-green-400 bg-green-900/30',
-  cancelled: 'text-red-400 bg-red-900/30',
+  placed: 'text-yellow-700 bg-yellow-50 border border-yellow-200',
+  confirmed: 'text-blue-700 bg-blue-50 border border-blue-200',
+  processing: 'text-purple-700 bg-purple-50 border border-purple-200',
+  shipped: 'text-cyan-700 bg-cyan-50 border border-cyan-200',
+  out_for_delivery: 'text-orange-700 bg-orange-50 border border-orange-200',
+  delivered: 'text-green-700 bg-green-50 border border-green-200',
+  cancelled: 'text-red-700 bg-red-50 border border-red-200',
 };
 
 export default function AdminOrdersPage() {
@@ -107,12 +107,12 @@ export default function AdminOrdersPage() {
                 <td className="px-4 py-3 text-charcoal-600">{order.items?.length} item{order.items?.length !== 1 ? 's' : ''}</td>
                 <td className="px-4 py-3 font-semibold text-charcoal-900">₹{order.totalAmount?.toLocaleString()}</td>
                 <td className="px-4 py-3">
-                  <span className={`text-xs px-2 py-0.5 ${order.paymentStatus === 'paid' ? 'bg-green-900/30 text-green-400' : order.paymentStatus === 'failed' ? 'bg-red-900/30 text-red-400' : 'bg-yellow-900/30 text-yellow-400'}`}>
+                  <span className={`text-xs px-2.5 py-1 rounded-sm font-medium capitalize ${order.paymentStatus === 'paid' ? 'bg-green-50 text-green-700 border border-green-200' : order.paymentStatus === 'failed' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-yellow-50 text-yellow-700 border border-yellow-200'}`}>
                     {order.paymentStatus}
                   </span>
                 </td>
                 <td className="px-4 py-3">
-                  <span className={`text-xs px-2 py-0.5 capitalize ${STATUS_COLORS[order.orderStatus] || 'text-charcoal-600'}`}>
+                  <span className={`text-xs px-2.5 py-1 rounded-sm font-medium capitalize ${STATUS_COLORS[order.orderStatus] || 'text-charcoal-600'}`}>
                     {order.orderStatus?.replace(/_/g, ' ')}
                   </span>
                 </td>

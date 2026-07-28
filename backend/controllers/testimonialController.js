@@ -8,7 +8,7 @@ const getActive = asyncHandler(async (req, res) => {
     where: { isActive: true },
     orderBy: [{ order: 'asc' }, { createdAt: 'desc' }],
   });
-  res.json({ success: true, testimonials });
+  res.json({ success: true, testimonials: testimonials.map(t => ({ ...t, _id: t.id })) });
 });
 
 // GET /api/testimonials/admin  — all testimonials (admin)
@@ -16,7 +16,7 @@ const getAll = asyncHandler(async (req, res) => {
   const testimonials = await prisma.testimonial.findMany({
     orderBy: [{ order: 'asc' }, { createdAt: 'desc' }],
   });
-  res.json({ success: true, testimonials });
+  res.json({ success: true, testimonials: testimonials.map(t => ({ ...t, _id: t.id })) });
 });
 
 // POST /api/testimonials/admin  — create
@@ -44,7 +44,7 @@ const create = asyncHandler(async (req, res) => {
     },
   });
 
-  res.status(201).json({ success: true, testimonial });
+  res.status(201).json({ success: true, testimonial: { ...testimonial, _id: testimonial.id } });
 });
 
 // PUT /api/testimonials/admin/:id  — update
@@ -79,7 +79,7 @@ const update = asyncHandler(async (req, res) => {
     },
   });
 
-  res.json({ success: true, testimonial });
+  res.json({ success: true, testimonial: { ...testimonial, _id: testimonial.id } });
 });
 
 // DELETE /api/testimonials/admin/:id
