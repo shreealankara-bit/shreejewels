@@ -1,0 +1,9 @@
+#!/usr/bin/expect -f
+set timeout 10
+spawn ssh -p 7576 root@103.135.230.35
+expect "password:"
+send "82F5OuzrkdX6T0Z\r"
+expect "# "
+send "pm2 logs 0 --err --lines 20 --nostream\r"
+expect "# "
+send "exit\r"

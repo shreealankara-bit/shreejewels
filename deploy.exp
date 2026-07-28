@@ -1,0 +1,16 @@
+#!/usr/bin/expect -f
+set timeout 20
+spawn ssh -p 7576 root@103.135.230.35
+expect "yes/no" {
+    send "yes\r"
+    expect "password:"
+    send "82F5OuzrkdX6T0Z\r"
+} "password:" {
+    send "82F5OuzrkdX6T0Z\r"
+}
+expect "# "
+send "pm2 list\r"
+expect "# "
+send "find / -name shreejewels -type d 2>/dev/null\r"
+expect "# "
+send "exit\r"

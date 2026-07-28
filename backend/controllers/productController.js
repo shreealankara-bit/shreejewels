@@ -193,6 +193,8 @@ const createProduct = asyncHandler(async (req, res) => {
       metaTitle: metaTitle || '',
       metaDescription: metaDescription || '',
       metaKeywords: metaKeywords || '',
+      shippingCharge: Number(req.body.shippingCharge) || 0,
+      shippingType: req.body.shippingType || 'flat',
     },
     include: {
       category: { select: { id: true, name: true, slug: true } },
@@ -240,6 +242,8 @@ const updateProduct = asyncHandler(async (req, res) => {
     ...(req.body.isBestseller !== undefined ? { isBestseller: toBool(req.body.isBestseller) } : {}),
     ...(req.body.isNewArrival !== undefined ? { isNewArrival: toBool(req.body.isNewArrival) } : {}),
     ...(req.body.isActive !== undefined ? { isActive: toBool(req.body.isActive) } : {}),
+    ...(req.body.shippingCharge !== undefined ? { shippingCharge: Number(req.body.shippingCharge) || 0 } : {}),
+    ...(req.body.shippingType !== undefined ? { shippingType: req.body.shippingType } : {}),
     ...(req.files?.length ? { images } : {}),
   };
 

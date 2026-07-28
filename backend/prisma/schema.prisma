@@ -116,6 +116,8 @@ model Product {
   isActive        Boolean       @default(true)
   ratingsAverage  Float         @default(0)
   ratingsCount    Int           @default(0)
+  shippingCharge  Float         @default(0)
+  shippingType    String        @default("flat")
   metaTitle       String        @default("")
   metaDescription String        @default("")
   metaKeywords    String        @default("")

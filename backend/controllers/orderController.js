@@ -136,6 +136,7 @@ const createPayment = asyncHandler(async (req, res) => {
   if (!items?.length) { res.status(400); throw new Error('No items in order'); }
 
   let subtotal = 0;
+  let customShipping = 0;
   const orderItems = [];
   const couponProducts = [];
 
@@ -158,6 +159,16 @@ const createPayment = asyncHandler(async (req, res) => {
     });
     couponProducts.push({ product, quantity: item.quantity });
     subtotal += price * item.quantity;
+    
+    // Calculate custom shipping per product
+    const prodShipping = product.shippingCharge || 0;
+    if (prodShipping > 0) {
+      if (product.shippingType === 'per_piece') {
+        customShipping += prodShipping * item.quantity;
+      } else {
+        customShipping += prodShipping;
+      }
+    }
   }
 
   // Coupon validation
@@ -177,7 +188,9 @@ const createPayment = asyncHandler(async (req, res) => {
     discount = result.discount;
   }
 
-  const shippingCharge = subtotal - discount >= 999 ? 0 : 60;
+  // Base shipping is 60 if subtotal - discount < 999, else 0
+  const baseShipping = subtotal - discount >= 999 ? 0 : 60;
+  const shippingCharge = baseShipping + customShipping;
   const totalAmount = subtotal - discount + shippingCharge;
 
   // Get user info for Cashfree customer_details

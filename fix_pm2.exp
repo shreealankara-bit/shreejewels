@@ -1,0 +1,11 @@
+#!/usr/bin/expect -f
+set timeout 10
+spawn ssh -p 7576 root@103.135.230.35
+expect "password:"
+send "82F5OuzrkdX6T0Z\r"
+expect "# "
+send "pm2 restart 0 --node-args='--dns-result-order=ipv4first'\r"
+expect "# "
+send "pm2 save\r"
+expect "# "
+send "exit\r"

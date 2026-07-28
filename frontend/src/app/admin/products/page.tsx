@@ -19,6 +19,8 @@ interface Product {
   images: { url: string }[];
   category: { name: string } | null;
   subCategory: { name: string } | null;
+  shippingCharge: number;
+  shippingType: string;
 }
 
 const EMPTY_FORM = {
@@ -26,6 +28,7 @@ const EMPTY_FORM = {
   category: '', subCategory: '', tags: '', material: '', weight: '', sku: '',
   isFeatured: false, isBestseller: false, isNewArrival: false, isActive: true,
   metaTitle: '', metaDescription: '', metaKeywords: '',
+  shippingCharge: '', shippingType: 'flat',
 };
 
 export default function AdminProductsPage() {
@@ -111,6 +114,8 @@ export default function AdminProductsPage() {
       metaTitle: (product as any).metaTitle || '',
       metaDescription: (product as any).metaDescription || '',
       metaKeywords: (product as any).metaKeywords || '',
+      shippingCharge: (product as any).shippingCharge?.toString() || '0',
+      shippingType: (product as any).shippingType || 'flat',
     });
     setImageFiles([]);
     setModalOpen(true);
@@ -477,6 +482,32 @@ export default function AdminProductsPage() {
                         </div>
                       </div>
                     )}
+                  </div>
+
+                  {/* Shipping Fields */}
+                  <div className="border-t border-cream-200 pt-4 space-y-4">
+                    <p className="text-xs font-semibold text-charcoal-500 uppercase tracking-widest">Shipping Options</p>
+                    <div>
+                      <label className="block text-xs text-charcoal-600 mb-1.5 uppercase tracking-wide">Shipping Charge Type</label>
+                      <select
+                        value={form.shippingType as string}
+                        onChange={e => setForm(p => ({ ...p, shippingType: e.target.value }))}
+                        className="w-full bg-cream-50 border border-cream-200 text-charcoal-900 text-sm px-3 py-2.5 focus:outline-none focus:border-gold-400"
+                      >
+                        <option value="flat">Flat Amount (Once per order)</option>
+                        <option value="per_piece">Per Piece (Multiplied by quantity)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-charcoal-600 mb-1.5 uppercase tracking-wide">Shipping Charge (₹)</label>
+                      <input
+                        type="number"
+                        value={form.shippingCharge as string}
+                        onChange={e => setForm(p => ({ ...p, shippingCharge: e.target.value }))}
+                        placeholder="0"
+                        className="w-full bg-cream-50 border border-cream-200 text-charcoal-900 text-sm px-3 py-2.5 focus:outline-none focus:border-gold-400 placeholder-charcoal-400"
+                      />
+                    </div>
                   </div>
 
                   {/* SEO Meta Fields */}

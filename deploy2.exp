@@ -1,0 +1,14 @@
+#!/usr/bin/expect -f
+set timeout 10
+spawn ssh -p 7576 root@103.135.230.35
+expect "yes/no" {
+    send "yes\r"
+    expect "password:"
+    send "82F5OuzrkdX6T0Z\r"
+} "password:" {
+    send "82F5OuzrkdX6T0Z\r"
+}
+expect "# "
+send "pm2 info 0 | grep 'script path'\r"
+expect "# "
+send "exit\r"

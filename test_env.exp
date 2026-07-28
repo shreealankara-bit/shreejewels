@@ -1,0 +1,9 @@
+#!/usr/bin/expect -f
+set timeout 10
+spawn ssh -p 7576 root@103.135.230.35
+expect "password:"
+send "82F5OuzrkdX6T0Z\r"
+expect "# "
+send "cat /var/www/shreejewels-release-20260619123011/backend/.env | grep GOOGLE\r"
+expect "# "
+send "exit\r"

@@ -1,0 +1,13 @@
+#!/usr/bin/expect -f
+set timeout 60
+spawn ssh -p 7576 root@103.135.230.35
+expect "password:"
+send "82F5OuzrkdX6T0Z\r"
+expect "# "
+send "cd /var/www/shreejewels-release-20260619123011\r"
+expect "# "
+send "git pull origin main\r"
+expect "# "
+send "pm2 restart 0\r"
+expect "# "
+send "exit\r"
