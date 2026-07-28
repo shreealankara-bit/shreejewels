@@ -99,7 +99,7 @@ const googleOAuthCallback = asyncHandler(async (req, res) => {
     res.redirect(`${getFrontendUrl()}/?login=google`);
   } catch (err) {
     console.error('Google OAuth callback error:', err.message);
-    res.redirect(`${getFrontendUrl()}/auth/login?error=google_failed`);
+    res.redirect(`${getFrontendUrl()}/auth/login?error=google_failed&msg=${encodeURIComponent(err.message)}`);
   }
 });
 
