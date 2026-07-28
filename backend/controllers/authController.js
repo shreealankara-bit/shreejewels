@@ -79,10 +79,14 @@ const googleOAuthCallback = asyncHandler(async (req, res) => {
   }
 
   try {
-    const { tokens } = await googleOAuthClient.getToken({
+    const tokenResponse = await axios.post('https://oauth2.googleapis.com/token', {
+      client_id: process.env.GOOGLE_CLIENT_ID,
+      client_secret: process.env.GOOGLE_CLIENT_SECRET,
       code,
+      grant_type: 'authorization_code',
       redirect_uri: getGoogleCallbackUrl(),
     });
+    const tokens = tokenResponse.data;
 
     if (!tokens.id_token) {
       return res.redirect(`${getFrontendUrl()}/auth/login?error=google_no_token`);

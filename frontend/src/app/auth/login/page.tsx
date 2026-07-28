@@ -26,8 +26,13 @@ function LoginContent() {
   // Show Google OAuth error if redirected back with error param
   useEffect(() => {
     const error = searchParams.get('error');
+    const msg = searchParams.get('msg');
     if (error?.startsWith('google')) {
-      toast.error('Google sign-in failed. Please try again or use email login.');
+      if (msg) {
+        toast.error(`Google sign-in failed: ${msg}`);
+      } else {
+        toast.error('Google sign-in failed. Please try again or use email login.');
+      }
     }
   }, [searchParams]);
 
