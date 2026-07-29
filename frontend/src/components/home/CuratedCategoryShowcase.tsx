@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { categoryAPI, productAPI } from '@/lib/api';
+import { subCategoryHref } from '@/lib/categoryLinks';
 
 const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=700&h=875&fit=crop&q=75';
 
@@ -274,9 +275,9 @@ export default function CuratedCategoryShowcase() {
       {visibleSubCategories.length > 0 && (
         <div className="curated-circles" role="tablist" aria-label="Category list">
           {visibleSubCategories.map((category: any) => (
-            <button
+            <Link
               key={category._id}
-              type="button"
+              href={subCategoryHref(activeSection, category)}
               className={`curated-circle ${activeSubCategoryId === category._id ? 'active' : ''}`}
               onClick={() => setActiveSubCategoryId(category._id)}
             >
@@ -297,7 +298,7 @@ export default function CuratedCategoryShowcase() {
                 )}
               </span>
               <span className="curated-circle-label">{category.name}</span>
-            </button>
+            </Link>
           ))}
         </div>
       )}
