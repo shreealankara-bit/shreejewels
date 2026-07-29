@@ -49,6 +49,24 @@ function ProductsContent({ initialCategorySlug }: { initialCategorySlug?: string
     parseInt(filters.maxPrice) || 10000,
   ]);
 
+  // Sync filters from URL whenever searchParams change (e.g. client-side navigation from homepage circles)
+  useEffect(() => {
+    setFilters({
+      category: initialCategorySlug || searchParams.get('category') || '',
+      subCategory: searchParams.get('subCategory') || '',
+      minPrice: searchParams.get('minPrice') || '',
+      maxPrice: searchParams.get('maxPrice') || '',
+      sort: searchParams.get('sort') || '-createdAt',
+      search: searchParams.get('search') || '',
+      tags: searchParams.get('tags') || '',
+      featured: searchParams.get('featured') || '',
+      bestseller: searchParams.get('bestseller') || '',
+      newArrival: searchParams.get('newArrival') || '',
+    });
+    setPage(1);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
   useEffect(() => {
     categoryAPI.getAll({ activeOnly: 'true' })
       .then(res => setCategories(res.data.categories || []))
