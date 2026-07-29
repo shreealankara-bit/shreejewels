@@ -179,13 +179,18 @@ const createPayment = asyncHandler(async (req, res) => {
     });
     if (!coupon) throw new Error('Invalid coupon code');
 
-    const result = calculateCouponDiscount({
-      coupon,
-      subtotal,
-      products: couponProducts,
-      userId: req.user.id,
-    });
-    discount = result.discount;
+    try {
+      const result = calculateCouponDiscount({
+        coupon,
+        subtotal,
+        products: couponProducts,
+        userId: req.user.id,
+      });
+      discount = result.discount;
+    } catch (couponErr) {
+      res.status(400);
+      throw new Error(couponErr.message || 'Coupon is not applicable to the selected products');
+    }
   }
 
   // Base shipping is 60 if subtotal - discount < 999, else 0

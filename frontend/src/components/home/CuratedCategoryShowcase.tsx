@@ -217,11 +217,13 @@ export default function CuratedCategoryShowcase() {
   }, [activeSection]);
   const activeSubCategory = useMemo(() => visibleSubCategories.find((s: any) => s._id === activeSubCategoryId) || visibleSubCategories[0] || null, [visibleSubCategories, activeSubCategoryId]);
 
+  // Reset subcategory only when the section tab changes (not when clicking subcategory circles)
   useEffect(() => {
     if (visibleSubCategories.length && !visibleSubCategories.some((sub: any) => sub._id === activeSubCategoryId)) {
       setActiveSubCategoryId(visibleSubCategories[0]._id);
     }
-  }, [visibleSubCategories, activeSubCategoryId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeSectionId]);
 
   // Extract tags/chips from metaDescription
   const chips = useMemo(() => {

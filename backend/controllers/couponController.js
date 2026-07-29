@@ -55,12 +55,18 @@ const validateCoupon = asyncHandler(async (req, res) => {
   }
 
   const products = await loadCartProducts(items);
-  const result = calculateCouponDiscount({
-    coupon,
-    subtotal: Number(subtotal),
-    products,
-    userId: req.user?.id || req.user?._id,
-  });
+  let result;
+  try {
+    result = calculateCouponDiscount({
+      coupon,
+      subtotal: Number(subtotal),
+      products,
+      userId: req.user?.id || req.user?._id,
+    });
+  } catch (couponErr) {
+    res.status(400);
+    throw new Error(couponErr.message || 'Coupon is not applicable to the selected products');
+  }
 
   res.json({
     success: true,

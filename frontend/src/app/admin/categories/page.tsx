@@ -176,14 +176,15 @@ export default function AdminCategoriesPage() {
           <>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/70 z-50" onClick={() => setModalOpen(false)} />
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
-              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white border border-cream-200 z-50 w-full max-w-md p-6"
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white border border-cream-200 z-50 w-full max-w-md flex flex-col"
+              style={{ maxHeight: '90vh' }}
             >
-              <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center justify-between p-6 pb-4 border-b border-cream-100">
                 <h2 className="text-lg font-display text-charcoal-900">{editCat ? 'Edit Category' : 'Add Category'}</h2>
                 <button onClick={() => setModalOpen(false)} className="text-charcoal-600 hover:text-charcoal-900"><X size={18} /></button>
               </div>
 
-              <div className="space-y-4">
+              <div className="overflow-y-auto flex-1 px-6 py-4 space-y-4">
                 <div>
                   <label className="block text-xs text-charcoal-600 mb-1.5 uppercase tracking-wide">Name *</label>
                   <input type="text" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
@@ -254,7 +255,7 @@ export default function AdminCategoriesPage() {
                 </div>
               </div>
 
-              <div className="flex gap-3 mt-6">
+              <div className="flex gap-3 p-6 pt-4 border-t border-cream-100">
                 <button onClick={() => setModalOpen(false)} className="flex-1 py-2.5 text-sm border border-cream-200 text-charcoal-600 hover:text-charcoal-900 transition-colors">Cancel</button>
                 <button onClick={handleSave} disabled={saving} id="save-category-btn" className="flex-1 py-2.5 text-sm bg-gold-500 hover:bg-gold-600 text-white font-medium transition-colors disabled:opacity-50">
                   {saving ? 'Saving...' : editCat ? 'Update' : 'Create'}
